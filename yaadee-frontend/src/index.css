@@ -1,0 +1,115 @@
+:root {
+  --bg-color: #fdfbf7;
+  --text-color: #3b3a30;
+  --accent-color: #e6b981;
+  --secondary-bg: #f4eee0;
+  --paper-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --pop-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.05'/%3E%3C/svg%3E");
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+h1, h2, h3, h4, h5, h6, .handwritten {
+  font-family: 'Caveat', cursive;
+}
+
+/* Polaroids */
+.polaroid {
+  background: white;
+  padding: 10px 10px 40px 10px;
+  box-shadow: var(--paper-shadow);
+  transform: rotate(-2deg);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  position: relative;
+}
+
+.polaroid:nth-child(even) {
+  transform: rotate(2deg);
+}
+
+.polaroid:hover {
+  transform: scale(1.05) rotate(0deg);
+  box-shadow: var(--pop-shadow);
+  z-index: 10;
+}
+
+.polaroid img {
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: cover;
+}
+
+.polaroid .caption {
+  font-family: 'Caveat', cursive;
+  font-size: 1.5rem;
+  text-align: center;
+  position: absolute;
+  bottom: 5px;
+  width: calc(100% - 20px);
+  color: #333;
+}
+
+/* Layout */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+/* Button */
+.btn {
+  background-color: var(--text-color);
+  color: var(--bg-color);
+  border: none;
+  padding: 10px 24px;
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  font-size: 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: var(--paper-shadow);
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--pop-shadow);
+  background-color: #2a2922;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Form Elements */
+input, textarea, select {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-family: 'Inter', sans-serif;
+  margin-bottom: 16px;
+  background-color: white;
+  transition: border-color 0.2s;
+}
+
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 2px rgba(230, 185, 129, 0.2);
+}
