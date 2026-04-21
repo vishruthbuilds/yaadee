@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { subscribeToActivePolls, subscribeToCompletedPolls, submitVote, fetchPollResults } from '../api';
+import { subscribeToActivePolls, subscribeToCompletedPolls, submitVote, fetchPollResults, unsubscribeChannel } from '../api';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
 
@@ -32,7 +32,10 @@ const LivePoll = () => {
       }
     });
 
-    return () => {};
+    return () => {
+      unsubscribeChannel(activeSub);
+      unsubscribeChannel(completedSub);
+    };
   }, [activePoll]);
 
   useEffect(() => {

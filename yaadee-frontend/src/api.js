@@ -100,21 +100,27 @@ export const fetchPollResults = async (pollId) => {
 };
 
 export const subscribeToActivePolls = (callback) => {
-  return supabase.channel('polls-channel')
-    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'polls' }, (payload) => {
+  const channel = supabase.channel(`polls-active-${Math.random()}`);
+  channel.on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'polls' }, (payload) => {
       if (payload.new.status === 'active') {
         callback(payload.new);
       }
     })
     .subscribe();
+  return channel;
 };
 
 export const subscribeToCompletedPolls = (callback) => {
-  return supabase.channel('polls-completed-channel')
-    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'polls' }, (payload) => {
+  const channel = supabase.channel(`polls-completed-${Math.random()}`);
+  channel.on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'polls' }, (payload) => {
       if (payload.new.status === 'completed') {
         callback(payload.new);
       }
     })
     .subscribe();
+  return channel;
+};
+
+export const unsubscribeChannel = (channel) => {
+  if (channel) supabase.removeChannel(channel);
 };
