@@ -13,6 +13,7 @@ const LivePoll = () => {
   // Search to vote state
   const [search, setSearch] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
+  const [selectedVoteName, setSelectedVoteName] = useState(null);
 
   useEffect(() => {
     // Load users for the voting options
@@ -26,7 +27,6 @@ const LivePoll = () => {
           if (active) {
             setActivePoll(active);
             setHasVoted(false);
-            setResults(null);
           }
         }
       });
@@ -37,21 +37,25 @@ const LivePoll = () => {
       setHasVoted(false);
       setResults(null);
       setSearch('');
+      setSelectedVoteName(null);
     });
 
     const completedSub = subscribeToCompletedPolls((poll) => {
-      if (activePoll && activePoll.id === poll.id) {
-        setActivePoll({ ...activePoll, status: 'completed' });
-        setTimeLeft(0);
-        fetchAndShowResults(poll.id);
-      }
+      setActivePoll(prev => {
+        if (prev && prev.id === poll.id) {
+          return { ...prev, status: 'completed' };
+        }
+        return prev;
+      });
+      setTimeLeft(0);
+      fetchAndShowResults(poll.id);
     });
 
     return () => {
       unsubscribeChannel(activeSub);
       unsubscribeChannel(completedSub);
     };
-  }, [activePoll]);
+  }, []); // Run once on mount
 
   // Sync timeLeft with activePoll options (expires_at)
   useEffect(() => {
@@ -111,16 +115,20 @@ const LivePoll = () => {
     }
   };
 
-  const handleVote = async (userName) => {
-    if (hasVoted) return;
+  const handleSelectPerson = (userName) => {
+    setSelectedVoteName(userName);
+    setSearch(userName);
+    setShowDropdown(false);
+  };
+
+  const handleVoteSubmit = async () => {
+    if (hasVoted || !selectedVoteName) return;
     let userStr = localStorage.getItem('yaadee_user');
     if (userStr === 'undefined' || !userStr) userStr = '{"name":"Anonymous"}';
     const voter = JSON.parse(userStr);
     
-    await submitVote(activePoll.id, userName, voter.name);
+    await submitVote(activePoll.id, selectedVoteName, voter.name);
     setHasVoted(true);
-    setShowDropdown(false);
-    setSearch(userName);
   };
 
   const closePollModal = () => {
@@ -198,11 +206,11 @@ const LivePoll = () => {
                           filteredUsers.map(user => (
                             <div 
                               key={user.id}
-                              onClick={() => handleVote(user.name)}
+                              onClick={() => handleSelectPerson(user.name)}
                               className="px-5 py-4 border-b border-stone-100 hover:bg-accent/5 cursor-pointer flex items-center justify-between transition-colors group"
                             >
                               <span className="font-serif text-xl group-hover:text-accent transition-colors">{user.name}</span>
-                              <span className="text-[10px] font-bold text-stone-400 uppercase tracking-tighter bg-stone-100 px-2 py-1 rounded-full group-hover:bg-accent group-hover:text-white transition-colors">Select Person</span>
+                              <span className="text-[10px] font-bold text-stone-400 uppercase tracking-tighter bg-stone-100 px-2 py-1 rounded-full group-hover:bg-accent group-hover:text-white transition-colors">Select</span>
                             </div>
                           ))
                         ) : (
@@ -211,6 +219,17 @@ const LivePoll = () => {
                       </motion.div>
                     )}
                   </AnimatePresence>
+
+                  {selectedVoteName && (
+                    <motion.button
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      onClick={handleVoteSubmit}
+                      className="w-full mt-6 bg-accent text-white font-bold py-4 rounded-sm shadow-xl hover:bg-red-600 transition-colors text-lg uppercase tracking-widest"
+                    >
+                      Submit Vote for {selectedVoteName}
+                    </motion.button>
+                  )}
                 </div>
               ) : (
                 <div className="text-center py-10 flex flex-col items-center">
