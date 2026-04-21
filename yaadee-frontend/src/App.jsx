@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 
-import Navigation from './components/Navigation';
+import BackButton from './components/BackButton';
 import Welcome from './pages/Welcome';
 import SelectUser from './pages/SelectUser';
 import MainHub from './pages/MainHub';
@@ -27,7 +27,7 @@ function App() {
         <div className="absolute -bottom-10 -right-10 w-96 h-80 bg-[#1f1616] opacity-10 rotate-[-15deg] rounded-sm mix-blend-multiply"></div>
       </div>
 
-      {location.pathname !== '/' && location.pathname !== '/login' && <Navigation />}
+      {location.pathname !== '/' && location.pathname !== '/login' && location.pathname !== '/select-user' && <BackButton />}
       <AnimatePresence mode="wait">
         <Routes location={location} key={location.pathname}>
           <Route path="/" element={<Welcome />} />
