@@ -21,7 +21,7 @@ const SelectUser = () => {
   }, []);
 
   const filteredUsers = users.filter(user => 
-    user.name.toLowerCase().includes(search.toLowerCase())
+    user.name && user.name.toLowerCase().includes(search.toLowerCase())
   );
 
   const handleContinue = () => {
@@ -64,7 +64,7 @@ const SelectUser = () => {
             />
             
             <AnimatePresence>
-              {showDropdown && search.length > 0 && (
+              {showDropdown && (
                 <motion.div 
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
