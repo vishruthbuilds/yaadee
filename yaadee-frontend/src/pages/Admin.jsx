@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   fetchPolls, createPoll, startPoll, closePoll, fetchPollResults, deletePoll,
-  fetchUsers, addUser, deleteUser,
+  fetchUsers, addUser, updateUser, deleteUser,
   fetchQuestions, addQuestion, deleteQuestion
 } from '../api';
 
@@ -16,6 +16,9 @@ const Admin = () => {
 
   // Form states
   const [newUser, setNewUser] = useState({ name: '', photoUrl: '' });
+  const [editingUserId, setEditingUserId] = useState(null);
+  const [editUserForm, setEditUserForm] = useState({ name: '', photoUrl: '' });
+  
   const [newPoll, setNewPoll] = useState({ question: '', options: '' });
   const [newQuestion, setNewQuestion] = useState({ text: '', options: '', correctAnswer: '' });
 
@@ -49,12 +52,42 @@ const Admin = () => {
     }
   };
 
+  // --- Image Upload to Base64 Helper ---
+  const handleImageUpload = (e, callback) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    // Check size (prevent extremely large files from crashing Supabase)
+    if (file.size > 2 * 1024 * 1024) {
+      alert('Please select an image smaller than 2MB');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      callback(reader.result); // This is the Base64 string
+    };
+    reader.readAsDataURL(file);
+  };
+
   // --- Users ---
   const handleAddUser = async (e) => {
     e.preventDefault();
     if (!newUser.name) return alert('Name is required');
     await addUser(newUser.name, newUser.photoUrl);
     setNewUser({ name: '', photoUrl: '' });
+    loadAllData();
+  };
+
+  const handleStartEditUser = (u) => {
+    setEditingUserId(u.id);
+    setEditUserForm({ name: u.name, photoUrl: u.photoUrl || '' });
+  };
+
+  const handleSaveEditUser = async (id) => {
+    if (!editUserForm.name) return alert('Name is required');
+    await updateUser(id, editUserForm.name, editUserForm.photoUrl);
+    setEditingUserId(null);
     loadAllData();
   };
 
@@ -160,22 +193,46 @@ const Admin = () => {
           <form onSubmit={handleAddUser} className="mb-6 flex flex-col gap-3 bg-stone-50 p-4 border border-stone-200">
             <h3 className="font-sans font-bold text-sm text-stone-500 uppercase tracking-wider">Add New Person</h3>
             <input type="text" placeholder="Name" value={newUser.name} onChange={e => setNewUser({...newUser, name: e.target.value})} className="p-2 border border-stone-300 w-full" />
-            <input type="text" placeholder="Photo URL (optional)" value={newUser.photoUrl} onChange={e => setNewUser({...newUser, photoUrl: e.target.value})} className="p-2 border border-stone-300 w-full" />
+            <div>
+              <label className="text-xs text-stone-500 mb-1 block">Upload Photo (Max 2MB)</label>
+              <input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, (base64) => setNewUser({...newUser, photoUrl: base64}))} className="text-sm" />
+            </div>
+            {newUser.photoUrl && <img src={newUser.photoUrl} alt="preview" className="w-16 h-16 object-cover rounded-sm border border-stone-300" />}
             <button type="submit" className="bg-ink text-paper py-2 px-4 hover:bg-stone-700 transition">Save Person</button>
           </form>
 
-          <div className="max-h-96 overflow-y-auto pr-2 flex flex-col gap-3">
+          <div className="max-h-[500px] overflow-y-auto pr-2 flex flex-col gap-3">
             {users.map(u => (
-              <div key={u.id} className="flex items-center justify-between p-3 border border-stone-200 bg-white">
-                <div className="flex items-center gap-3">
-                  {u.photoUrl ? (
-                    <img src={u.photoUrl} alt="profile" className="w-10 h-10 object-cover rounded-full" />
-                  ) : (
-                    <div className="w-10 h-10 bg-stone-200 rounded-full flex items-center justify-center font-serif">{u.name.charAt(0)}</div>
-                  )}
-                  <span className="font-sans font-bold">{u.name}</span>
-                </div>
-                <button onClick={() => handleDeleteUser(u.id)} className="text-red-500 hover:text-red-700 text-sm font-bold px-2 py-1">Delete</button>
+              <div key={u.id} className="flex flex-col p-3 border border-stone-200 bg-white">
+                {editingUserId === u.id ? (
+                  <div className="flex flex-col gap-2">
+                    <input type="text" value={editUserForm.name} onChange={e => setEditUserForm({...editUserForm, name: e.target.value})} className="p-1 border border-stone-300 w-full" />
+                    <div>
+                      <label className="text-xs text-stone-500 block mb-1">Change Photo</label>
+                      <input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, (base64) => setEditUserForm({...editUserForm, photoUrl: base64}))} className="text-sm" />
+                    </div>
+                    {editUserForm.photoUrl && <img src={editUserForm.photoUrl} alt="preview" className="w-12 h-12 object-cover rounded-sm border border-stone-300" />}
+                    <div className="flex gap-2 mt-2">
+                      <button onClick={() => handleSaveEditUser(u.id)} className="bg-green-600 text-white text-xs px-3 py-1 rounded-sm">Save</button>
+                      <button onClick={() => setEditingUserId(null)} className="bg-stone-200 text-ink text-xs px-3 py-1 rounded-sm">Cancel</button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      {u.photoUrl ? (
+                        <img src={u.photoUrl} alt="profile" className="w-10 h-10 object-cover rounded-full" />
+                      ) : (
+                        <div className="w-10 h-10 bg-stone-200 rounded-full flex items-center justify-center font-serif text-stone-500">{u.name.charAt(0)}</div>
+                      )}
+                      <span className="font-sans font-bold text-lg">{u.name}</span>
+                    </div>
+                    <div className="flex gap-2">
+                      <button onClick={() => handleStartEditUser(u)} className="text-blue-500 hover:text-blue-700 text-sm font-bold px-2 py-1">Edit</button>
+                      <button onClick={() => handleDeleteUser(u.id)} className="text-red-500 hover:text-red-700 text-sm font-bold px-2 py-1">Delete</button>
+                    </div>
+                  </div>
+                )}
               </div>
             ))}
           </div>

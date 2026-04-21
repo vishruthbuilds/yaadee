@@ -133,6 +133,12 @@ export const addUser = async (name, photoUrl) => {
   return data;
 };
 
+export const updateUser = async (id, name, photoUrl) => {
+  const { data, error } = await supabase.from('users').update({ name, photoUrl: photoUrl || null }).eq('id', id).select();
+  if (error) console.error('Error updating user:', error);
+  return data;
+};
+
 export const deleteUser = async (id) => {
   const { data, error } = await supabase.from('users').delete().eq('id', id);
   if (error) console.error('Error deleting user:', error);
