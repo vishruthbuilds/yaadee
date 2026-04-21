@@ -72,10 +72,21 @@ const LivePoll = () => {
 
       const timer = setInterval(() => {
         const remaining = updateTimer();
-        if (remaining <= 0) clearInterval(timer);
+        if (remaining <= 0) {
+          clearInterval(timer);
+          // Automatically close the poll when time hits 0
+          import('../api').then(({ closePoll }) => {
+            closePoll(activePoll.id).then(() => {
+              fetchAndShowResults(activePoll.id);
+            });
+          });
+        }
       }, 500);
 
       return () => clearInterval(timer);
+    } else if (activePoll && activePoll.status === 'completed') {
+      setTimeLeft(0);
+      fetchAndShowResults(activePoll.id);
     } else {
       setTimeLeft(0);
     }
@@ -146,7 +157,7 @@ const LivePoll = () => {
           initial={{ opacity: 0, scale: 0.8, rotate: -5 }}
           animate={{ opacity: 1, scale: 1, rotate: 2 }}
           exit={{ opacity: 0, scale: 0.8, rotate: 5 }}
-          className="paper-cutout w-full max-w-md pointer-events-auto shadow-2xl border border-stone-300 relative z-10"
+          className="paper-cutout w-full max-w-md pointer-events-auto shadow-2xl border border-stone-300 relative z-10 max-h-[90vh] overflow-y-auto"
           onClick={(e) => e.stopPropagation()}
         >
           <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-24 h-8 bg-white/60 rotate-[-3deg] shadow-sm backdrop-blur-sm"></div>
@@ -181,7 +192,7 @@ const LivePoll = () => {
                         initial={{ opacity: 0, y: -10 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -10 }}
-                        className="absolute top-full left-0 right-0 mt-2 bg-white border border-stone-200 shadow-2xl rounded-sm max-h-56 overflow-y-auto text-left z-[100]"
+                        className="absolute bottom-full left-0 right-0 mb-2 bg-white border border-stone-200 shadow-2xl rounded-sm max-h-56 overflow-y-auto text-left z-[100]"
                       >
                         {filteredUsers.length > 0 ? (
                           filteredUsers.map(user => (
