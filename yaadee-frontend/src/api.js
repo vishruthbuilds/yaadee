@@ -126,23 +126,23 @@ export const unsubscribeChannel = (channel) => {
 };
 
 export const addUser = async (name, photoUrl) => {
-  const { data, error } = await supabase.from('users').insert([
+  const result = await supabase.from('users').insert([
     { id: crypto.randomUUID(), name, photoUrl: photoUrl || null, quote: '' }
   ]).select();
-  if (error) console.error('Error adding user:', error);
-  return data;
+  if (result.error) console.error('Error adding user:', result.error);
+  return result;
 };
 
 export const updateUser = async (id, name, photoUrl) => {
-  const { data, error } = await supabase.from('users').update({ name, photoUrl: photoUrl || null }).eq('id', id).select();
-  if (error) console.error('Error updating user:', error);
-  return data;
+  const result = await supabase.from('users').update({ name, photoUrl: photoUrl || null }).eq('id', id).select();
+  if (result.error) console.error('Error updating user:', result.error);
+  return result;
 };
 
 export const deleteUser = async (id) => {
-  const { data, error } = await supabase.from('users').delete().eq('id', id);
-  if (error) console.error('Error deleting user:', error);
-  return data;
+  const result = await supabase.from('users').delete().eq('id', id);
+  if (result.error) console.error('Error deleting user:', result.error);
+  return result;
 };
 
 export const deletePoll = async (id) => {

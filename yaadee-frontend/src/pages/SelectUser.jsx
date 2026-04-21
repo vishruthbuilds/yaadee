@@ -78,13 +78,7 @@ const SelectUser = () => {
                         onClick={() => handleSelectUser(user)}
                         className="px-6 py-4 border-b border-stone-100 hover:bg-stone-50 cursor-pointer flex items-center gap-4 transition-colors"
                       >
-                        {user.photoUrl ? (
-                          <img src={user.photoUrl} alt={user.name} className="w-10 h-10 object-cover rounded-full shadow-sm" />
-                        ) : (
-                          <div className="w-10 h-10 bg-stone-200 rounded-full flex items-center justify-center font-serif text-stone-600 shadow-sm">
-                            {user.name.charAt(0)}
-                          </div>
-                        )}
+                        {/* No image in dropdown as requested */}
                         <span className="font-serif text-lg">{user.name}</span>
                       </div>
                     ))
