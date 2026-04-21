@@ -54,3 +54,67 @@ export const fetchAnonymous = async () => {
   }
   return data;
 };
+
+export const fetchPolls = async () => {
+  const { data, error } = await supabase.from('polls').select('*').order('created_at', { ascending: false });
+  if (error) console.error('Error fetching polls:', error);
+  return data;
+};
+
+export const createPoll = async (question, options) => {
+  const { data, error } = await supabase.from('polls').insert([
+    { question, options, status: 'pending' }
+  ]).select();
+  if (error) console.error('Error creating poll:', error);
+  return data;
+};
+
+export const startPoll = async (id) => {
+  const { data, error } = await supabase.from('polls')
+    .update({ status: 'active', started_at: new Date().toISOString() })
+    .eq('id', id).select();
+  if (error) console.error('Error starting poll:', error);
+  return data;
+};
+
+export const closePoll = async (id) => {
+  const { data, error } = await supabase.from('polls')
+    .update({ status: 'completed' })
+    .eq('id', id).select();
+  if (error) console.error('Error closing poll:', error);
+  return data;
+};
+
+export const submitVote = async (pollId, selectedOption, voterName) => {
+  const { data, error } = await supabase.from('votes').insert([
+    { poll_id: pollId, selected_option: selectedOption, voter_name: voterName }
+  ]).select();
+  if (error) console.error('Error submitting vote:', error);
+  return data;
+};
+
+export const fetchPollResults = async (pollId) => {
+  const { data, error } = await supabase.from('votes').select('selected_option').eq('poll_id', pollId);
+  if (error) console.error('Error fetching poll results:', error);
+  return data;
+};
+
+export const subscribeToActivePolls = (callback) => {
+  return supabase.channel('polls-channel')
+    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'polls' }, (payload) => {
+      if (payload.new.status === 'active') {
+        callback(payload.new);
+      }
+    })
+    .subscribe();
+};
+
+export const subscribeToCompletedPolls = (callback) => {
+  return supabase.channel('polls-completed-channel')
+    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'polls' }, (payload) => {
+      if (payload.new.status === 'completed') {
+        callback(payload.new);
+      }
+    })
+    .subscribe();
+};

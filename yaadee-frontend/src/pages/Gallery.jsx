@@ -1,53 +1,61 @@
-import { useState, useEffect } from 'react';
-// Assuming gallery photos are just public scrapbook photos or users' photos
-// For this demo, let's fetch all users and show their main photos as gallery
+import React, { useState, useEffect } from 'react';
 import { fetchUsers } from '../api';
-import PageWrapper from '../components/PageWrapper';
 import { motion } from 'framer-motion';
 
 const Gallery = () => {
   const [photos, setPhotos] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchUsers().then(data => {
       if (data) {
+        // Find users with photos
         const userPhotos = data.filter(u => u.photoUrl).map(u => ({ url: u.photoUrl, caption: u.name }));
         setPhotos(userPhotos);
       }
+      setLoading(false);
     });
   }, []);
 
   return (
-    <PageWrapper>
-      <h1 className="handwritten" style={{ fontSize: '4rem', textAlign: 'center', marginBottom: '2rem' }}>Our Gallery</h1>
+    <div className="min-h-screen py-16 px-6 max-w-6xl mx-auto">
+      <motion.h1 
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="font-serif text-5xl text-center mb-16 text-ink"
+      >
+        Throwbacks
+      </motion.h1>
       
-      <div style={styles.grid}>
-        {photos.map((p, i) => (
-          <motion.div 
-            key={i} 
-            className="polaroid"
-            initial={{ opacity: 0, y: 50 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "100px" }}
-            transition={{ duration: 0.5, delay: i * 0.1 }}
-          >
-            <img src={`http://localhost:5000${p.url}`} alt="Gallery" loading="lazy" />
-            <p className="caption">{p.caption}</p>
-          </motion.div>
-        ))}
-        {photos.length === 0 && <p style={{ textAlign: 'center', width: '100%' }}>No photos added yet.</p>}
-      </div>
-    </PageWrapper>
+      {loading ? (
+        <div className="text-center font-serif text-xl">Developing photos...</div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-12">
+          {photos.map((p, i) => {
+            const rotationClass = i % 2 === 0 ? 'polaroid-rotate-left' : 'polaroid-rotate-right';
+            
+            return (
+              <motion.div 
+                key={i} 
+                className={`polaroid ${rotationClass}`}
+                initial={{ opacity: 0, y: 50 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "100px" }}
+                transition={{ duration: 0.5, delay: i * 0.1 }}
+              >
+                <div className="aspect-square bg-stone-200 mb-4 overflow-hidden rounded-sm relative">
+                  <img src={p.url} alt="Gallery" loading="lazy" className="object-cover w-full h-full grayscale hover:grayscale-0 transition-all duration-500" />
+                  <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-white/40 pointer-events-none"></div>
+                </div>
+                <p className="font-serif text-center text-lg italic text-ink">{p.caption}</p>
+              </motion.div>
+            )
+          })}
+          {photos.length === 0 && <p className="text-center w-full col-span-full font-serif text-stone-500">No memories captured yet.</p>}
+        </div>
+      )}
+    </div>
   );
-};
-
-const styles = {
-  grid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
-    gap: '3rem',
-    padding: '1rem'
-  }
 };
 
 export default Gallery;

@@ -1,6 +1,5 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { fetchQuestions } from '../api';
-import PageWrapper from '../components/PageWrapper';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const MCQ = () => {
@@ -11,8 +10,8 @@ const MCQ = () => {
   useEffect(() => {
     fetchQuestions().then(data => {
       if (data && data.length > 0) {
-        // Just take up to 3 random questions
-        setQuestions(data.sort(() => 0.5 - Math.random()).slice(0, 3));
+        // Shuffle and take 3 random questions
+        setQuestions([...data].sort(() => 0.5 - Math.random()).slice(0, 3));
       }
     });
   }, []);
@@ -26,88 +25,58 @@ const MCQ = () => {
       if (currentIndex < questions.length - 1) {
         setCurrentIndex(prev => prev + 1);
       } else {
-        setFeedback("You've completed the fun quiz! 🎓");
+        setFeedback("You've completed the chaos! 🎓");
       }
     }, 2000);
   };
 
-  if (questions.length === 0) return <PageWrapper><h2>Loading questions...</h2></PageWrapper>;
+  if (questions.length === 0) return <div className="text-center font-serif text-xl mt-20">Recalling memories...</div>;
 
   const question = questions[currentIndex];
 
   return (
-    <PageWrapper>
-      <div style={styles.wrapper}>
-        <h1 style={styles.title}>Memory Lane Quiz</h1>
-        
-        <AnimatePresence mode="wait">
-          {!feedback.includes('completed') ? (
-            <motion.div 
-              key={currentIndex}
-              initial={{ x: 50, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              exit={{ x: -50, opacity: 0 }}
-              style={styles.card}
-            >
-              <h2 style={{ marginBottom: '2rem' }}>{question.text}</h2>
-              <div style={styles.options}>
-                {question.options.map((opt, i) => (
-                  <button key={i} className="btn" style={styles.optionBtn} onClick={() => handleAnswer(opt)}>
-                    {opt}
-                  </button>
-                ))}
-              </div>
-            </motion.div>
-          ) : null}
-        </AnimatePresence>
+    <div className="min-h-screen py-16 px-6 max-w-2xl mx-auto flex flex-col items-center">
+      <h1 className="font-serif text-5xl mb-12 text-ink">Class Chaos</h1>
+      
+      <AnimatePresence mode="wait">
+        {!feedback.includes('completed') ? (
+          <motion.div 
+            key={currentIndex}
+            initial={{ x: 50, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: -50, opacity: 0 }}
+            className="paper-cutout w-full"
+          >
+            <h2 className="font-serif text-3xl mb-8 leading-snug">{question.text}</h2>
+            <div className="flex flex-col gap-4">
+              {question.options.map((opt, i) => (
+                <button 
+                  key={i} 
+                  className="bg-stone-100 hover:bg-stone-200 text-ink font-sans text-lg py-4 px-6 text-left transition-colors border border-stone-200"
+                  onClick={() => handleAnswer(opt)}
+                >
+                  {opt}
+                </button>
+              ))}
+            </div>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
 
-        <AnimatePresence>
-          {feedback && (
-            <motion.div 
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: -20, opacity: 0 }}
-              style={styles.feedback}
-            >
-              <h3 className="handwritten" style={{ fontSize: '2.5rem', color: '#e6b981' }}>{feedback}</h3>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-    </PageWrapper>
+      <AnimatePresence>
+        {feedback && (
+          <motion.div 
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: -20, opacity: 0 }}
+            className="mt-12 text-center"
+          >
+            <h3 className="font-serif italic text-3xl text-accent">{feedback}</h3>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   );
-};
-
-const styles = {
-  wrapper: {
-    maxWidth: '600px',
-    margin: '0 auto',
-    textAlign: 'center'
-  },
-  title: {
-    fontSize: '3.5rem',
-    marginBottom: '2rem'
-  },
-  card: {
-    background: 'white',
-    padding: '3rem',
-    borderRadius: '16px',
-    boxShadow: 'var(--paper-shadow)',
-  },
-  options: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '1rem'
-  },
-  optionBtn: {
-    background: '#f4eee0',
-    color: '#3b3a30',
-    fontSize: '1.1rem',
-    padding: '15px'
-  },
-  feedback: {
-    marginTop: '2rem'
-  }
 };
 
 export default MCQ;

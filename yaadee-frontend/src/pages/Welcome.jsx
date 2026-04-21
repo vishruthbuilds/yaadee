@@ -1,107 +1,75 @@
-import { useEffect, useState } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { fetchConfig } from '../api';
 
 const Welcome = () => {
-  const [config, setConfig] = useState(null);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    fetchConfig().then(data => {
-      if (data) setConfig(data);
-    });
-  }, []);
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.5,
+        delayChildren: 0.3
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: "easeOut" } }
+  };
 
   return (
-    <motion.div 
-      initial={{ opacity: 0 }} 
-      animate={{ opacity: 1 }} 
-      exit={{ opacity: 0 }}
-      style={styles.container}
-    >
-      {config?.logoUrl ? (
-        <motion.img 
-          initial={{ scale: 0.8 }} animate={{ scale: 1 }} transition={{ duration: 1 }}
-          src={`http://localhost:5000${config.logoUrl}`} 
-          alt="Logo" 
-          style={styles.logo} 
-        />
-      ) : (
-        <div style={styles.placeholderLogo}>LOGO</div>
-      )}
-      
-      <motion.h1 
-        initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.3 }}
-        style={styles.title}
-      >
-        {config?.eventName || 'Farewell 2026'}
-      </motion.h1>
+    <div className="min-h-screen flex items-center justify-center relative">
+      {/* Scattered background elements for depth */}
+      <motion.div 
+        initial={{ opacity: 0, rotate: -10 }} 
+        animate={{ opacity: 0.4, rotate: -15 }} 
+        transition={{ duration: 2, delay: 0.5 }}
+        className="absolute top-20 left-20 w-32 h-32 bg-[#e6dfd1] rounded-sm shadow-sm z-0"
+      ></motion.div>
+      <motion.div 
+        initial={{ opacity: 0, rotate: 10 }} 
+        animate={{ opacity: 0.3, rotate: 20 }} 
+        transition={{ duration: 2, delay: 0.8 }}
+        className="absolute bottom-20 right-20 w-48 h-48 bg-[#e8e2d4] rounded-sm shadow-sm z-0"
+      ></motion.div>
 
-      <motion.p 
-        initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.5 }}
-        style={styles.subtitle}
+      <motion.div 
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+        className="relative z-10 text-center max-w-2xl px-6 paper-cutout"
       >
-        A nostalgic trip down memory lane.
-      </motion.p>
-
-      <motion.button 
-        initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.7 }}
-        className="btn" 
-        style={styles.btn}
-        onClick={() => navigate('/login')}
-      >
-        Enter Memories
-      </motion.button>
-    </motion.div>
+        <motion.p variants={itemVariants} className="text-stone-500 uppercase tracking-widest text-sm mb-4">
+          Welcome
+        </motion.p>
+        
+        <motion.h1 variants={itemVariants} className="text-6xl md:text-8xl font-serif text-ink mb-6">
+          Yaadee
+        </motion.h1>
+        
+        <motion.h2 variants={itemVariants} className="text-xl md:text-2xl font-serif italic text-stone-700 mb-4">
+          A quiet place to revisit everything you lived
+        </motion.h2>
+        
+        <motion.p variants={itemVariants} className="text-stone-500 text-lg mb-12">
+          Because this isn’t a goodbye. It’s a replay.
+        </motion.p>
+        
+        <motion.div variants={itemVariants}>
+          <button 
+            onClick={() => navigate('/select-user')}
+            className="btn-primary"
+          >
+            Start
+          </button>
+        </motion.div>
+      </motion.div>
+    </div>
   );
-};
-
-const styles = {
-  container: {
-    height: '100vh',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    textAlign: 'center',
-  },
-  logo: {
-    width: '150px',
-    height: '150px',
-    borderRadius: '50%',
-    objectFit: 'cover',
-    marginBottom: '2rem',
-    boxShadow: '0 10px 20px rgba(0,0,0,0.1)'
-  },
-  placeholderLogo: {
-    width: '150px',
-    height: '150px',
-    borderRadius: '50%',
-    background: '#e6b981',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    color: 'white',
-    fontSize: '2rem',
-    fontWeight: 'bold',
-    marginBottom: '2rem',
-  },
-  title: {
-    fontSize: '5rem',
-    color: '#3b3a30',
-    marginBottom: '0.5rem',
-  },
-  subtitle: {
-    fontSize: '1.2rem',
-    color: '#666',
-    marginBottom: '2rem',
-  },
-  btn: {
-    padding: '12px 32px',
-    fontSize: '1.2rem',
-    borderRadius: '30px'
-  }
 };
 
 export default Welcome;
