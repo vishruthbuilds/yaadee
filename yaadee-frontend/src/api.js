@@ -124,3 +124,40 @@ export const subscribeToCompletedPolls = (callback) => {
 export const unsubscribeChannel = (channel) => {
   if (channel) supabase.removeChannel(channel);
 };
+
+export const addUser = async (name, photoUrl) => {
+  const { data, error } = await supabase.from('users').insert([
+    { id: crypto.randomUUID(), name, photoUrl: photoUrl || null, quote: '' }
+  ]).select();
+  if (error) console.error('Error adding user:', error);
+  return data;
+};
+
+export const deleteUser = async (id) => {
+  const { data, error } = await supabase.from('users').delete().eq('id', id);
+  if (error) console.error('Error deleting user:', error);
+  return data;
+};
+
+export const deletePoll = async (id) => {
+  // Supabase delete might fail if foreign keys (votes) exist, unless ON DELETE CASCADE is set.
+  // We'll delete votes first to be safe.
+  await supabase.from('votes').delete().eq('poll_id', id);
+  const { data, error } = await supabase.from('polls').delete().eq('id', id);
+  if (error) console.error('Error deleting poll:', error);
+  return data;
+};
+
+export const addQuestion = async (text, options, correctAnswer) => {
+  const { data, error } = await supabase.from('questions').insert([
+    { id: crypto.randomUUID(), text, options, correctAnswer }
+  ]).select();
+  if (error) console.error('Error adding question:', error);
+  return data;
+};
+
+export const deleteQuestion = async (id) => {
+  const { data, error } = await supabase.from('questions').delete().eq('id', id);
+  if (error) console.error('Error deleting question:', error);
+  return data;
+};

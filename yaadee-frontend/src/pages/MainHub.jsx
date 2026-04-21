@@ -16,7 +16,7 @@ const MainHub = () => {
   }, [navigate]);
 
   const features = [
-    { id: 'wall', title: 'Wall of Fame', desc: 'Live titles & polls', path: '#', rotation: 'polaroid-rotate-left' },
+    { id: 'wall', title: 'Wall of Fame', desc: 'Live titles & polls', path: '/wall-of-fame', rotation: 'polaroid-rotate-left' },
     { id: 'throwbacks', title: 'Throwbacks', desc: 'Captured memories', path: '/throwbacks', rotation: 'polaroid-rotate-right' },
     { id: 'confessions', title: 'Confessions', desc: 'Unspoken words', path: '/confessions', rotation: 'polaroid-rotate-left' },
     { id: 'chaos', title: 'Class Chaos', desc: 'Who did what?', path: '/chaos', rotation: 'polaroid-rotate-right' },
@@ -49,7 +49,10 @@ const MainHub = () => {
             <div className="absolute inset-0 bg-stone-100/50 mix-blend-multiply opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
             
             <h2 className="text-3xl font-serif text-ink mb-2 z-10">{feature.title}</h2>
-            <p className="text-stone-500 font-sans z-10">{feature.desc}</p>
+            <p className="text-stone-500 font-sans z-10 mb-2">{feature.desc}</p>
+            {feature.id === 'wall' && (
+              <span className="text-accent font-bold text-sm tracking-widest uppercase z-10 mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">Let's Go &rarr;</span>
+            )}
           </motion.div>
         ))}
       </div>
