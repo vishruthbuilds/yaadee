@@ -8,10 +8,13 @@ const AdminPolls = () => {
   const [loading, setLoading] = useState(true);
   const [liveVotes, setLiveVotes] = useState({});
   const [activeSubscriptions, setActiveSubscriptions] = useState({});
+  const [currentTime, setCurrentTime] = useState(Date.now());
 
   useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(Date.now()), 500);
     loadPolls();
     return () => {
+      clearInterval(timer);
       // Cleanup subscriptions when leaving page
       Object.values(activeSubscriptions).forEach(sub => {
         if (sub && typeof sub.unsubscribe === 'function') sub.unsubscribe();
@@ -138,6 +141,14 @@ const AdminPolls = () => {
                       <button onClick={() => handleAddTime(poll.id)} className="bg-blue-500 text-white font-bold px-6 py-2 rounded-sm hover:bg-blue-600 transition">
                         +10 SECONDS
                       </button>
+                      
+                      {poll.options && poll.options[0] && (
+                        <div className="flex items-center ml-4">
+                          <span className="font-sans font-bold text-xl text-red-500 animate-pulse">
+                            ⏳ {Math.max(0, Math.floor((new Date(poll.options[0]).getTime() - currentTime) / 1000))}s
+                          </span>
+                        </div>
+                      )}
                     </>
                   )}
                   {poll.status === 'completed' && (

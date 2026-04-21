@@ -18,6 +18,19 @@ const LivePoll = () => {
     // Load users for the voting options
     fetchUsers().then(data => { if (data) setUsers(data); });
 
+    // Fetch initially active poll just in case they open the page late
+    import('../api').then(({ fetchPolls }) => {
+      fetchPolls().then(polls => {
+        if (polls) {
+          const active = polls.find(p => p.status === 'active');
+          if (active) {
+            setActivePoll(active);
+            setHasVoted(false);
+          }
+        }
+      });
+    });
+
     const activeSub = subscribeToActivePolls((poll) => {
       setActivePoll(poll);
       setHasVoted(false);
