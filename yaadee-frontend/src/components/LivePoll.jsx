@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { subscribeToActivePolls, subscribeToCompletedPolls, submitVote, fetchPollResults, unsubscribeChannel, fetchUsers } from '../api';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
@@ -18,7 +18,7 @@ const LivePoll = () => {
     // Load users for the voting options
     fetchUsers().then(data => { if (data) setUsers(data); });
 
-    // Fetch initially active poll just in case they open the page late
+    // Fetch initially active poll on mount
     import('../api').then(({ fetchPolls }) => {
       fetchPolls().then(polls => {
         if (polls) {
@@ -26,6 +26,7 @@ const LivePoll = () => {
           if (active) {
             setActivePoll(active);
             setHasVoted(false);
+            setResults(null);
           }
         }
       });
@@ -52,25 +53,31 @@ const LivePoll = () => {
     };
   }, [activePoll]);
 
+  // Sync timeLeft with activePoll options (expires_at)
   useEffect(() => {
     if (activePoll && activePoll.status === 'active') {
       const expiresAtStr = activePoll.options && activePoll.options.length > 0 ? activePoll.options[0] : null;
       if (!expiresAtStr) return;
 
-      const timer = setInterval(() => {
+      const updateTimer = () => {
         const expiresAt = new Date(expiresAtStr).getTime();
         const now = Date.now();
         const remaining = Math.max(0, Math.floor((expiresAt - now) / 1000));
-        
         setTimeLeft(remaining);
-        
-        if (remaining <= 0) {
-          clearInterval(timer);
-          // Wait for backend to officially close it, or just show tallying
-        }
-      }, 500); // Check more frequently to sync perfectly
+        return remaining;
+      };
+
+      const initialRemaining = updateTimer();
+      if (initialRemaining <= 0) return;
+
+      const timer = setInterval(() => {
+        const remaining = updateTimer();
+        if (remaining <= 0) clearInterval(timer);
+      }, 500);
 
       return () => clearInterval(timer);
+    } else {
+      setTimeLeft(0);
     }
   }, [activePoll]);
 
@@ -83,11 +90,12 @@ const LivePoll = () => {
       });
       setResults(tallies);
       
+      // Fire celebration confetti!
       confetti({
-        particleCount: 200,
-        spread: 100,
+        particleCount: 250,
+        spread: 120,
         origin: { y: 0.6 },
-        colors: ['#d88c7d', '#e6dfd1', '#2c2a25', '#fcd34d', '#4ade80']
+        colors: ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff']
       });
     }
   };
@@ -101,6 +109,7 @@ const LivePoll = () => {
     await submitVote(activePoll.id, userName, voter.name);
     setHasVoted(true);
     setShowDropdown(false);
+    setSearch(userName);
   };
 
   const closePollModal = () => {
@@ -108,45 +117,52 @@ const LivePoll = () => {
     setResults(null);
   };
 
-  const filteredUsers = users.filter(user => 
-    user.name && user.name.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredUsers = useMemo(() => {
+    return users.filter(user => 
+      user.name && user.name.toLowerCase().includes(search.toLowerCase())
+    );
+  }, [users, search]);
 
-  // Winner logic
-  let winner = null;
-  if (results && Object.keys(results).length > 0) {
+  // Winner calculation
+  const winner = useMemo(() => {
+    if (!results || Object.keys(results).length === 0) return null;
     const maxVotes = Math.max(...Object.values(results));
     const winnerName = Object.keys(results).find(opt => results[opt] === maxVotes);
-    if (winnerName) {
-      winner = users.find(u => u.name === winnerName) || { name: winnerName };
-      winner.votes = maxVotes;
-    }
-  }
+    if (!winnerName) return null;
+    const user = users.find(u => u.name === winnerName) || { name: winnerName };
+    return { ...user, votes: maxVotes };
+  }, [results, users]);
 
   if (!activePoll) return null;
+
+  const isPollLive = activePoll.status === 'active' && timeLeft > 0;
 
   return (
     <AnimatePresence>
       <div className="fixed inset-0 pointer-events-none z-[9999] flex items-center justify-center p-4">
+        <div className="absolute inset-0 bg-stone-900/40 backdrop-blur-[2px] pointer-events-auto" onClick={closePollModal}></div>
+        
         <motion.div 
           initial={{ opacity: 0, scale: 0.8, rotate: -5 }}
           animate={{ opacity: 1, scale: 1, rotate: 2 }}
           exit={{ opacity: 0, scale: 0.8, rotate: 5 }}
-          className="paper-cutout w-full max-w-md pointer-events-auto shadow-2xl border border-stone-300 relative"
+          className="paper-cutout w-full max-w-md pointer-events-auto shadow-2xl border border-stone-300 relative z-10"
+          onClick={(e) => e.stopPropagation()}
         >
           <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-24 h-8 bg-white/60 rotate-[-3deg] shadow-sm backdrop-blur-sm"></div>
 
           <h3 className="font-serif text-accent uppercase tracking-widest text-sm mb-2 text-center mt-2">Wall of Fame</h3>
-          <p className="font-serif text-3xl text-ink text-center mb-6">{activePoll.question}</p>
+          <p className="font-serif text-3xl text-ink text-center mb-4">{activePoll.question}</p>
           
-          {activePoll.status === 'active' && timeLeft > 0 ? (
+          {isPollLive ? (
             <div>
-              <div className={`text-center font-sans text-5xl font-bold mb-8 ${timeLeft <= 10 ? 'text-red-500 animate-pulse' : 'text-stone-300'}`}>
+              <div className={`text-center font-sans text-6xl font-bold mb-6 transition-colors ${timeLeft <= 10 ? 'text-red-500 animate-pulse' : 'text-stone-300'}`}>
                 {timeLeft}s
               </div>
 
               {!hasVoted ? (
-                <div className="relative">
+                <div className="relative mb-4">
+                  <label className="block text-xs font-bold text-stone-400 uppercase tracking-widest mb-2 text-center">Cast your vote</label>
                   <input 
                     type="text" 
                     placeholder="Search name to vote..." 
@@ -156,75 +172,87 @@ const LivePoll = () => {
                       setShowDropdown(true);
                     }}
                     onFocus={() => setShowDropdown(true)}
-                    className="w-full px-4 py-3 rounded-sm border border-stone-300 focus:outline-none focus:ring-2 focus:ring-accent shadow-sm font-sans text-lg text-ink"
+                    className="w-full px-4 py-4 rounded-sm border border-stone-300 focus:outline-none focus:ring-2 focus:ring-accent shadow-sm font-serif text-xl text-ink bg-[#fdfbf7]"
                   />
                   
-                  {showDropdown && (
-                    <motion.div 
-                      initial={{ opacity: 0, y: -5 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="absolute top-full left-0 right-0 mt-1 bg-white border border-stone-200 shadow-xl rounded-sm max-h-48 overflow-y-auto text-left z-50"
-                    >
-                      {filteredUsers.length > 0 ? (
-                        filteredUsers.map(user => (
-                          <div 
-                            key={user.id}
-                            onClick={() => handleVote(user.name)}
-                            className="px-4 py-3 border-b border-stone-100 hover:bg-stone-50 cursor-pointer flex items-center justify-between transition-colors"
-                          >
-                            <span className="font-serif text-lg">{user.name}</span>
-                            <span className="text-xs text-stone-400 font-bold tracking-widest uppercase bg-stone-100 px-2 py-1 rounded-full">Vote</span>
-                          </div>
-                        ))
-                      ) : (
-                        <div className="px-4 py-3 text-stone-400 font-sans italic text-sm">No names found.</div>
-                      )}
-                    </motion.div>
-                  )}
+                  <AnimatePresence>
+                    {showDropdown && (
+                      <motion.div 
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="absolute top-full left-0 right-0 mt-2 bg-white border border-stone-200 shadow-2xl rounded-sm max-h-56 overflow-y-auto text-left z-[100]"
+                      >
+                        {filteredUsers.length > 0 ? (
+                          filteredUsers.map(user => (
+                            <div 
+                              key={user.id}
+                              onClick={() => handleVote(user.name)}
+                              className="px-5 py-4 border-b border-stone-100 hover:bg-accent/5 cursor-pointer flex items-center justify-between transition-colors group"
+                            >
+                              <span className="font-serif text-xl group-hover:text-accent transition-colors">{user.name}</span>
+                              <span className="text-[10px] font-bold text-stone-400 uppercase tracking-tighter bg-stone-100 px-2 py-1 rounded-full group-hover:bg-accent group-hover:text-white transition-colors">Select Person</span>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="px-5 py-4 text-stone-400 font-sans italic text-sm">No names found in directory.</div>
+                        )}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
               ) : (
-                <div className="text-center my-8 text-accent font-serif italic text-xl">
-                  Vote cast! Waiting for the results...
+                <div className="text-center py-10 flex flex-col items-center">
+                  <div className="w-16 h-16 border-4 border-accent border-t-transparent rounded-full animate-spin mb-4"></div>
+                  <p className="font-serif italic text-2xl text-accent">Vote cast for <span className="font-bold underline">{search}</span>!</p>
+                  <p className="text-stone-400 text-sm mt-2">Waiting for results...</p>
                 </div>
               )}
             </div>
           ) : (
-            <div>
+            <div className="py-4">
               {results ? (
-                <div className="flex flex-col items-center">
-                  <div className="text-center mb-6 font-serif text-3xl text-accent font-bold">
-                    Congratulations!
-                  </div>
+                <div className="flex flex-col items-center text-center">
+                  <h2 className="font-serif text-4xl text-accent font-bold mb-6">Congratulations!</h2>
                   
                   {winner ? (
-                    <div className="flex flex-col items-center mb-6">
-                      <div className="polaroid polaroid-rotate-right cursor-default mb-4 shadow-xl">
-                        <div className="aspect-square w-32 bg-stone-200 mb-2 overflow-hidden rounded-sm flex items-center justify-center">
+                    <motion.div 
+                      initial={{ scale: 0.9, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      className="flex flex-col items-center"
+                    >
+                      <div className="polaroid polaroid-rotate-right cursor-default mb-6 shadow-2xl scale-110">
+                        <div className="aspect-square w-40 bg-stone-200 mb-3 overflow-hidden rounded-sm flex items-center justify-center relative">
                           {winner.photoUrl ? (
                             <img src={winner.photoUrl} alt={winner.name} className="object-cover w-full h-full" />
                           ) : (
-                            <div className="text-4xl text-stone-400 font-serif">{winner.name.charAt(0)}</div>
+                            <div className="text-6xl text-stone-400 font-serif">{winner.name.charAt(0)}</div>
                           )}
+                          <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-white/20"></div>
                         </div>
+                        <h3 className="font-serif text-2xl font-bold text-ink">{winner.name}</h3>
                       </div>
-                      <h3 className="font-serif text-3xl font-bold">{winner.name}</h3>
-                      <span className="text-stone-500 font-bold bg-stone-100 px-3 py-1 mt-2 rounded-full text-sm">
-                        Winner with {winner.votes} votes!
-                      </span>
-                    </div>
+                      
+                      <div className="bg-accent text-white font-bold px-8 py-2 rounded-full text-lg shadow-lg mb-8">
+                        Winner with {winner.votes} {winner.votes === 1 ? 'vote' : 'votes'}!
+                      </div>
+                    </motion.div>
                   ) : (
-                    <div className="text-center font-serif text-stone-500 italic mb-6">No votes were cast...</div>
+                    <div className="text-center font-serif text-stone-500 italic mb-10 text-xl">The crowd was silent... No votes cast.</div>
                   )}
 
                   <button 
                     onClick={closePollModal}
-                    className="w-full mt-2 py-3 bg-stone-800 text-white font-sans tracking-widest hover:bg-black transition-colors rounded-sm"
+                    className="btn-primary w-full py-4 text-xl tracking-widest shadow-xl"
                   >
-                    CLOSE
+                    CONTINUE &rarr;
                   </button>
                 </div>
               ) : (
-                <div className="text-center font-serif text-stone-500 py-8">Tallying the votes...</div>
+                <div className="text-center py-12 flex flex-col items-center">
+                   <div className="w-12 h-12 border-4 border-stone-200 border-t-stone-800 rounded-full animate-spin mb-4"></div>
+                   <p className="font-serif text-2xl text-ink">Tallying the final votes...</p>
+                </div>
               )}
             </div>
           )}
