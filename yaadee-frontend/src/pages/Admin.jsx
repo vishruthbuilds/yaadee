@@ -106,12 +106,12 @@ const Admin = () => {
   // --- Polls ---
   const handleCreatePoll = async (e) => {
     e.preventDefault();
-    const optionsArray = newPoll.options.split(',').map(o => o.trim()).filter(o => o);
-    if (!newPoll.question || optionsArray.length === 0) return alert('Question and options are required');
+    if (!newPoll.question) return alert('Question is required');
     
-    await createPoll(newPoll.question, optionsArray);
+    await createPoll(newPoll.question);
     setNewPoll({ question: '', options: '' });
     loadAllData();
+    alert("Poll created!");
   };
 
   const handleStartPoll = async (id) => {
@@ -222,51 +222,21 @@ const Admin = () => {
 
         {/* BOX 2: WALL OF FAME (POLLS) */}
         <div className="paper-cutout p-6">
-          <h2 className="font-serif text-2xl mb-4 text-accent">Wall of Fame (Polls)</h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-serif text-2xl text-accent">Wall of Fame (Polls)</h2>
+            <button 
+              onClick={() => window.location.href = '/admin/polls'} 
+              className="bg-stone-200 text-ink px-4 py-1 rounded-sm text-sm font-bold hover:bg-stone-300 transition"
+            >
+              View All Polls &rarr;
+            </button>
+          </div>
           
           <form onSubmit={handleCreatePoll} className="mb-6 flex flex-col gap-3 bg-stone-50 p-4 border border-stone-200">
             <h3 className="font-sans font-bold text-sm text-stone-500 uppercase tracking-wider">Create New Poll</h3>
             <input type="text" placeholder="Question (e.g. Most likely to...)" value={newPoll.question} onChange={e => setNewPoll({...newPoll, question: e.target.value})} className="p-2 border border-stone-300 w-full" />
-            <input type="text" placeholder="Options (comma separated)" value={newPoll.options} onChange={e => setNewPoll({...newPoll, options: e.target.value})} className="p-2 border border-stone-300 w-full" />
             <button type="submit" className="bg-ink text-paper py-2 px-4 hover:bg-stone-700 transition">Save Poll</button>
           </form>
-
-          <div className="max-h-96 overflow-y-auto pr-2 flex flex-col gap-3">
-            {polls.map(poll => (
-              <div key={poll.id} className="p-4 border border-stone-200 bg-white relative">
-                <button onClick={() => handleDeletePoll(poll.id)} className="absolute top-2 right-2 text-red-300 hover:text-red-500 text-xs font-bold">X</button>
-                <div className="font-serif text-lg mb-1 pr-6">{poll.question}</div>
-                <div className="text-xs text-stone-500 mb-3">Status: <span className={`font-bold ${poll.status === 'active' ? 'text-green-500' : 'text-stone-500'}`}>{poll.status.toUpperCase()}</span></div>
-                
-                <div className="flex gap-2">
-                  {poll.status === 'pending' && <button onClick={() => handleStartPoll(poll.id)} className="bg-green-600 text-white px-3 py-1 text-sm hover:bg-green-700">Start Poll</button>}
-                  {poll.status === 'active' && <button onClick={() => handleClosePoll(poll.id)} className="bg-red-500 text-white px-3 py-1 text-sm hover:bg-red-600">Stop Poll</button>}
-                  {poll.status === 'completed' && <button onClick={() => handleViewResults(poll.id)} className="bg-stone-200 text-ink border border-stone-300 px-3 py-1 text-sm hover:bg-stone-300">Results</button>}
-                </div>
-
-                {resultsPollId === poll.id && results && (
-                  <div className="mt-4 p-3 bg-stone-50 border border-stone-200">
-                    <h4 className="font-serif mb-2">Highest Voted:</h4>
-                    {Object.keys(results).length > 0 ? (() => {
-                      const maxVotes = Math.max(...Object.values(results));
-                      const winners = Object.keys(results).filter(opt => results[opt] === maxVotes);
-                      return (
-                        <div>
-                          {winners.map(w => (
-                            <div key={w} className="font-bold text-accent text-lg">{w} <span className="text-stone-500 text-sm font-normal">({maxVotes} votes)</span></div>
-                          ))}
-                        </div>
-                      );
-                    })() : <div className="text-stone-500 italic">No votes cast.</div>}
-                    
-                    <div className="mt-3 pt-3 border-t border-stone-200 text-xs text-stone-500">
-                      All Options: {Object.entries(results).map(([opt, count]) => `${opt}: ${count}`).join(' | ')}
-                    </div>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
         </div>
 
         {/* BOX 3: CLASS CHAOS (GAMES) */}

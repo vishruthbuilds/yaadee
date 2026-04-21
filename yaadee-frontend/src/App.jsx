@@ -13,6 +13,7 @@ import Gallery from './pages/Gallery';
 import Opinions from './pages/Opinions';
 import Admin from './pages/Admin';
 import AdminUsers from './pages/AdminUsers';
+import AdminPolls from './pages/AdminPolls';
 import WallOfFame from './pages/WallOfFame';
 
 function App() {
@@ -41,6 +42,7 @@ function App() {
           <Route path="/confessions" element={<Opinions />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="/admin/users" element={<AdminUsers />} />
+          <Route path="/admin/polls" element={<AdminPolls />} />
           <Route path="/wall-of-fame" element={<WallOfFame />} />
         </Routes>
       </AnimatePresence>

@@ -61,20 +61,37 @@ export const fetchPolls = async () => {
   return data;
 };
 
-export const createPoll = async (question, options) => {
+export const createPoll = async (question) => {
   const { data, error } = await supabase.from('polls').insert([
-    { question, options, status: 'pending' }
+    { question, options: [], status: 'pending' }
   ]).select();
   if (error) console.error('Error creating poll:', error);
   return data;
 };
 
-export const startPoll = async (id) => {
+export const startPoll = async (id, durationSeconds = 30) => {
+  const expiresAt = new Date(Date.now() + durationSeconds * 1000).toISOString();
   const { data, error } = await supabase.from('polls')
-    .update({ status: 'active', started_at: new Date().toISOString() })
+    .update({ status: 'active', started_at: new Date().toISOString(), options: [expiresAt] })
     .eq('id', id).select();
   if (error) console.error('Error starting poll:', error);
   return data;
+};
+
+export const extendPoll = async (id, extraSeconds = 10) => {
+  // Fetch current to get options
+  const { data: pollData } = await supabase.from('polls').select('options').eq('id', id).single();
+  if (pollData && pollData.options && pollData.options.length > 0) {
+    const currentExpiresAt = new Date(pollData.options[0]).getTime();
+    const newExpiresAt = new Date(currentExpiresAt + extraSeconds * 1000).toISOString();
+    
+    const { data, error } = await supabase.from('polls')
+      .update({ options: [newExpiresAt] })
+      .eq('id', id).select();
+    if (error) console.error('Error extending poll:', error);
+    return data;
+  }
+  return null;
 };
 
 export const closePoll = async (id) => {
@@ -97,6 +114,16 @@ export const fetchPollResults = async (pollId) => {
   const { data, error } = await supabase.from('votes').select('selected_option').eq('poll_id', pollId);
   if (error) console.error('Error fetching poll results:', error);
   return data;
+};
+
+export const subscribeToVotes = (pollId, callback) => {
+  const channel = supabase.channel(`votes-${pollId}-${Math.random()}`);
+  channel.on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'votes' }, (payload) => {
+    if (payload.new.poll_id === pollId) {
+      callback(payload.new);
+    }
+  }).subscribe();
+  return channel;
 };
 
 export const subscribeToActivePolls = (callback) => {
