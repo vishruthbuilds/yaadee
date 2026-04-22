@@ -4,14 +4,14 @@ import { fetchTimeCapsule } from '../api';
 
 const TimeCapsule = () => {
   const [data, setData] = useState(null);
-  const [spreadIndex, setSpreadIndex] = useState(0); 
+  const [pageIndex, setPageIndex] = useState(0); // Index of the page currently on the RIGHT
   const [section, setSection] = useState('book'); // 'book', 'reel', 'video'
   const [isFlipping, setIsFlipping] = useState(false);
   
   const reelRef = useRef(null);
   const crankRef = useRef(null);
   const crankRotate = useMotionValue(0);
-  const springRotate = useSpring(crankRotate, { stiffness: 60, damping: 25 });
+  const springRotate = useSpring(crankRotate, { stiffness: 40, damping: 20 });
   
   useEffect(() => {
     const loadData = async () => {
@@ -20,6 +20,19 @@ const TimeCapsule = () => {
     };
     loadData();
   }, []);
+
+  // Recalibrated Crank Logic: 360 deg = 1 image width (~45vw)
+  useEffect(() => {
+    const unsubscribe = springRotate.on("change", (latest) => {
+      if (reelRef.current && section === 'reel') {
+        const reel = reelRef.current;
+        const frameWidth = window.innerWidth * 0.45 + 32; // width + gap
+        const scrollPos = (latest / 360) * frameWidth;
+        reel.scrollLeft = Math.abs(scrollPos);
+      }
+    });
+    return () => unsubscribe();
+  }, [springRotate, section]);
 
   const handleCrankDrag = (event, info) => {
     if (!crankRef.current) return;
@@ -30,56 +43,42 @@ const TimeCapsule = () => {
     crankRotate.set(angle + 90);
   };
 
-  // Infinite Scroll Logic
-  useEffect(() => {
-    const unsubscribe = springRotate.on("change", (latest) => {
-      if (reelRef.current && section === 'reel') {
-        const reel = reelRef.current;
-        const totalWidth = reel.scrollWidth;
-        const visibleWidth = reel.clientWidth;
-        const maxScroll = totalWidth - visibleWidth;
-        
-        // Map rotation (360deg) to a portion of the reel
-        const scrollSpeed = 5; 
-        let newScroll = (latest % 360 + 360) % 360 / 360 * maxScroll;
-        
-        // To make it feel infinite, we use the triple-buffer trick
-        // but for now, simple modulo scroll:
-        reel.scrollLeft = newScroll;
-      }
-    });
-    return () => unsubscribe();
-  }, [springRotate, section]);
-
   if (!data) return <div className="min-h-screen flex items-center justify-center font-serif italic text-stone-400">Opening the archive...</div>;
 
   const bookImages = data.book_images || [];
-  // Triple the reel images for infinite-feeling loop
   const reelImages = [...(data.reel_images || []), ...(data.reel_images || []), ...(data.reel_images || [])];
   const finalVideo = data.final_video;
 
   const turnPage = () => {
     if (isFlipping) return;
-    if ((spreadIndex + 1) * 2 - 1 >= bookImages.length) {
+    if (pageIndex + 2 >= bookImages.length) {
        setSection('reel');
        return;
     }
     setIsFlipping(true);
-    // State updates BEFORE animation ends to ensure images are ready
     setTimeout(() => {
-      setSpreadIndex(prev => prev + 1);
+      setPageIndex(prev => prev + 2);
       setIsFlipping(false);
     }, 800);
   };
 
   const prevPage = () => {
-    if (isFlipping || spreadIndex === 0) return;
+    if (isFlipping || pageIndex === 0) return;
     setIsFlipping(true);
     setTimeout(() => {
-      setSpreadIndex(prev => prev - 1);
+      setPageIndex(prev => Math.max(0, prev - 2));
       setIsFlipping(false);
     }, 800);
   };
+
+  // True Independent Page Logic:
+  // Spread 0: Left=None, Right=Img 0
+  // Spread 1: Left=Img 1, Right=Img 2
+  // Spread 2: Left=Img 3, Right=Img 4
+  const currentLeft = pageIndex > 0 ? bookImages[pageIndex - 1] : null;
+  const currentRight = bookImages[pageIndex];
+  const flippingBack = bookImages[pageIndex + 1];
+  const nextRight = bookImages[pageIndex + 2];
 
   return (
     <div className="min-h-screen bg-[#fdfbf7] overflow-hidden selection:bg-accent/20">
@@ -89,52 +88,48 @@ const TimeCapsule = () => {
             key="book"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0, x: -100 }}
+            exit={{ opacity: 0, x: -50 }}
             className="h-screen flex flex-col items-center justify-center p-4 relative"
           >
-            <div className="text-center mb-10 z-10">
-              <span className="text-accent uppercase tracking-[0.6em] text-[10px] mb-2 block font-bold">Volume I</span>
-              <h1 className="text-4xl md:text-6xl font-serif italic text-ink">The Memory Album</h1>
+            <div className="text-center mb-8 z-10">
+              <span className="text-accent uppercase tracking-[0.6em] text-[10px] mb-2 block font-bold">Memory Album</span>
+              <h1 className="text-4xl md:text-6xl font-serif italic text-ink">Volume I</h1>
             </div>
 
             {/* 3D BOOK */}
             <div className="relative perspective-2000 w-full max-w-5xl aspect-[1.414/1] flex items-center justify-center">
               <div className="relative w-full h-full flex bg-[#f5f2eb] rounded shadow-2xl overflow-hidden border border-stone-200/50">
                 
-                {/* LEFT PAGE (Always showing previous back) */}
+                {/* LEFT PAGE (Static) */}
                 <div className="w-1/2 h-full bg-[#faf7f2] relative overflow-hidden border-r border-stone-200/30">
                   <div className="absolute inset-0 page-texture"></div>
-                  {spreadIndex > 0 && (
-                    <img src={bookImages[spreadIndex * 2 - 1]} className="w-full h-full object-cover" alt="" />
-                  )}
+                  {currentLeft && <img src={currentLeft} className="w-full h-full object-cover" alt="" />}
                 </div>
 
-                {/* RIGHT PAGE (Always showing next front) */}
+                {/* RIGHT PAGE (Next Static) */}
                 <div className="w-1/2 h-full bg-[#faf7f2] relative overflow-hidden">
                   <div className="absolute inset-0 page-texture"></div>
-                  {bookImages[(spreadIndex + 1) * 2] && (
-                    <img src={bookImages[(spreadIndex + 1) * 2]} className="w-full h-full object-cover" alt="" />
-                  )}
+                  {nextRight && <img src={nextRight} className="w-full h-full object-cover" alt="" />}
                 </div>
 
-                {/* THE FLIPPING SHEET - Pre-loaded with current and next images */}
+                {/* THE FLIPPING SHEET */}
                 <motion.div 
-                  key={spreadIndex}
+                  key={pageIndex}
                   initial={{ rotateY: 0 }}
                   animate={isFlipping ? { rotateY: -180 } : { rotateY: 0 }}
-                  transition={{ duration: 0.8, ease: [0.645, 0.045, 0.355, 1] }}
+                  transition={{ duration: 0.8, ease: "easeInOut" }}
                   style={{ transformOrigin: "left center", left: "50%" }}
                   className="absolute top-0 w-1/2 h-full preserve-3d z-20 pointer-events-none"
                 >
-                   {/* Front: Current Right Image */}
-                   <div className="absolute inset-0 backface-hidden bg-[#faf7f2] shadow-2xl overflow-hidden border-l border-stone-100">
+                   {/* Front Side: Current Right Image */}
+                   <div className="absolute inset-0 backface-hidden bg-[#faf7f2] shadow-xl overflow-hidden border-l border-stone-100">
                       <div className="absolute inset-0 page-texture"></div>
-                      <img src={bookImages[spreadIndex * 2]} className="w-full h-full object-cover" alt="" />
+                      <img src={currentRight} className="w-full h-full object-cover" alt="" />
                    </div>
-                   {/* Back: Next Left Image */}
-                   <div className="absolute inset-0 bg-[#faf7f2] shadow-2xl overflow-hidden border-r border-stone-100" style={{ transform: "rotateY(180deg)" }}>
+                   {/* Back Side: Next Left Image (No Mirroring) */}
+                   <div className="absolute inset-0 bg-[#faf7f2] shadow-xl overflow-hidden border-r border-stone-100" style={{ transform: "rotateY(180deg)" }}>
                       <div className="absolute inset-0 page-texture"></div>
-                      <img src={bookImages[spreadIndex * 2 + 1]} className="w-full h-full object-cover" alt="" />
+                      {flippingBack && <img src={flippingBack} className="w-full h-full object-cover" alt="" />}
                    </div>
                 </motion.div>
 
@@ -142,15 +137,15 @@ const TimeCapsule = () => {
                 <div className="absolute left-1/2 top-0 bottom-0 w-12 -translate-x-1/2 bg-gradient-to-r from-black/10 via-transparent to-black/10 z-30 pointer-events-none"></div>
               </div>
 
-              {/* Interaction Overlay */}
+              {/* Controls */}
               <div className="absolute inset-0 z-40 flex">
-                <div onClick={prevPage} className="w-1/2 h-full cursor-pointer group flex items-center justify-start p-8">
-                   <div className="w-12 h-12 rounded-full bg-white/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">&larr;</div>
-                </div>
-                <div onClick={turnPage} className="w-1/2 h-full cursor-pointer group flex items-center justify-end p-8">
-                   <div className="w-12 h-12 rounded-full bg-white/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">&rarr;</div>
-                </div>
+                <div onClick={prevPage} className="w-1/2 h-full cursor-pointer" />
+                <div onClick={turnPage} className="w-1/2 h-full cursor-pointer" />
               </div>
+            </div>
+
+            <div className="mt-8">
+               <p className="text-stone-400 font-serif italic text-sm">Turning the story...</p>
             </div>
           </motion.section>
         )}
@@ -162,26 +157,25 @@ const TimeCapsule = () => {
             animate={{ opacity: 1 }}
             className="h-screen flex flex-col items-center justify-center bg-[#0d0d0c] relative overflow-hidden"
           >
-            <div className="text-center mb-20 z-10">
-              <span className="text-stone-700 uppercase tracking-[0.6em] text-[10px] mb-2 block font-bold">Chapter II</span>
+            <div className="text-center mb-16 z-10">
+              <span className="text-stone-700 uppercase tracking-[0.6em] text-[10px] mb-2 block font-bold">Projection Room</span>
               <h1 className="text-4xl md:text-6xl font-serif italic text-white/80">Cinematic Stream</h1>
             </div>
 
             <div className="w-full relative py-12 flex flex-col items-center">
               <div 
                 ref={reelRef}
-                className="w-full flex gap-8 px-[10%] overflow-x-hidden"
+                className="w-full flex gap-8 px-[25%] overflow-x-hidden"
               >
                 {reelImages.map((img, i) => (
                   <div key={i} className="flex-shrink-0 w-[45vw] aspect-video bg-stone-900 border-y-[15px] border-dashed border-stone-800 relative shadow-2xl overflow-hidden">
-                    <img src={img} className="w-full h-full object-cover opacity-70" alt="" />
+                    <img src={img} className="w-full h-full object-cover opacity-60" alt="" />
                   </div>
                 ))}
               </div>
 
-              {/* MECHANICAL CRANK - INFINITE ROTATION */}
               <div className="mt-24 relative flex flex-col items-center">
-                <p className="text-stone-500 text-[10px] uppercase tracking-[0.4em] mb-10 font-bold">Spin the crank to shoot</p>
+                <p className="text-stone-500 text-[10px] uppercase tracking-[0.4em] mb-10 font-bold">One full rotation per frame</p>
                 
                 <div ref={crankRef} className="relative w-48 h-48 flex items-center justify-center">
                   <div className="absolute w-full h-full rounded-full bg-stone-900 border-4 border-stone-800 shadow-[inset_0_0_30px_rgba(0,0,0,0.8)]" />
@@ -221,7 +215,6 @@ const TimeCapsule = () => {
                 </button>
               </div>
             </div>
-            <div className="absolute inset-0 pointer-events-none opacity-[0.05] grain-overlay"></div>
           </motion.section>
         )}
 
@@ -230,14 +223,13 @@ const TimeCapsule = () => {
             key="video"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="h-screen bg-black flex items-center justify-center relative overflow-hidden"
+            className="h-screen bg-black flex items-center justify-center"
           >
             {finalVideo ? (
-              <video src={finalVideo} autoPlay loop className="w-full h-full object-cover" />
+              <video src={finalVideo} autoPlay loop className="w-full h-full object-cover opacity-80" />
             ) : (
               <div className="text-center p-8 text-stone-700 font-serif italic text-2xl">Finishing the reel...</div>
             )}
-            <div className="absolute inset-0 shadow-[inset_0_0_200px_rgba(0,0,0,1)] pointer-events-none"></div>
           </motion.section>
         )}
       </AnimatePresence>
