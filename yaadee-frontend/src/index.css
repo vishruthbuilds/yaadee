@@ -1,59 +1,81 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Lora:ital,wght@0,400;0,500;0,600;1,400;1,500;1,600&display=swap');
 @import "tailwindcss";
 
 
 @theme {
   --font-sans: "Inter", sans-serif;
-  --font-serif: "Playfair Display", serif;
+  --font-serif: "Lora", serif;
   
-  --color-paper: #f4f1ea;
-  --color-ink: #2c2a25;
-  --color-accent: #d88c7d;
+  --color-paper: #fdfbf7;
+  --color-ink: #1a1917;
+  --color-accent: #8b4513;
+  --color-muted: #78716c;
+  --color-gold: #c5a059;
   
-  --shadow-polaroid: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06), 0 20px 25px -5px rgba(0, 0, 0, 0.05);
+  --shadow-polaroid: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  --shadow-inner: inset 0 2px 4px 0 rgba(0, 0, 0, 0.05);
 }
 
 @layer base {
   body {
     @apply bg-paper text-ink font-sans min-h-screen relative overflow-x-hidden;
-    /* Paper grain texture SVG */
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
+    /* Sophisticated Paper Texture */
+    background-image: 
+      radial-gradient(at 0% 0%, rgba(197, 160, 89, 0.03) 0, transparent 50%),
+      radial-gradient(at 50% 0%, rgba(139, 69, 19, 0.02) 0, transparent 50%),
+      url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.04'/%3E%3C/svg%3E");
+    background-attachment: fixed;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    @apply font-serif;
+    @apply font-serif italic tracking-tight;
   }
 }
 
 @layer components {
   .polaroid {
-    @apply bg-white p-4 pb-12 shadow-polaroid rounded-sm transition-transform duration-300;
+    @apply bg-white p-3 md:p-4 pb-10 md:pb-14 shadow-polaroid rounded-sm transition-all duration-500 ring-1 ring-black/5;
+    background-image: linear-gradient(to bottom right, #fff, #fafafa);
   }
   
   .polaroid:hover {
-    @apply scale-105 z-10;
+    @apply -translate-y-2 scale-105 z-20 shadow-2xl;
   }
   
-  .polaroid-rotate-left {
-    transform: rotate(-2deg);
-  }
-  
-  .polaroid-rotate-right {
-    transform: rotate(3deg);
-  }
-  
-  .polaroid:hover.polaroid-rotate-left,
-  .polaroid:hover.polaroid-rotate-right {
-    transform: scale(1.05) rotate(0deg);
+  .polaroid img {
+    @apply grayscale-[0.2] sepia-[0.1] contrast-[1.1];
   }
 
   .paper-cutout {
-    @apply bg-[#fdfbf7] p-6 shadow-sm border border-stone-200 transition-all duration-300;
-    clip-path: polygon(1% 0, 100% 1%, 99% 100%, 0 99%);
+    @apply bg-white/70 backdrop-blur-md p-8 md:p-12 shadow-sm border border-stone-200/50 transition-all duration-500 relative overflow-hidden;
+    clip-path: polygon(0.5% 0.5%, 99.5% 0%, 100% 99.5%, 0% 100%);
+  }
+
+  .paper-cutout::before {
+    content: '';
+    @apply absolute inset-0 opacity-[0.03] pointer-events-none;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)'/%3E%3C/svg%3E");
   }
   
   .btn-primary {
-    @apply bg-ink text-paper px-6 py-3 font-sans tracking-wide transition-all hover:bg-stone-700 active:scale-95;
-    clip-path: polygon(2% 0, 100% 3%, 98% 100%, 0 98%);
+    @apply bg-ink text-paper px-8 py-4 font-sans font-medium tracking-widest uppercase text-xs transition-all duration-300 hover:bg-accent hover:-translate-y-0.5 active:translate-y-0 shadow-lg hover:shadow-accent/20;
+    clip-path: polygon(3% 0, 100% 2%, 97% 100%, 0 98%);
   }
+
+  .handwritten {
+    @apply font-serif italic text-accent;
+  }
+}
+
+/* Custom Nostalgic Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-paper;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-stone-300 rounded-full border-2 border-paper hover:bg-stone-400 transition-colors;
 }
