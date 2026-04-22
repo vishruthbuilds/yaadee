@@ -1,13 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
+import { motion, AnimatePresence, useMotionValue, useTransform, useSpring } from 'framer-motion';
 import { fetchTimeCapsule } from '../api';
-import PageWrapper from '../components/PageWrapper';
 
 const TimeCapsule = () => {
   const [data, setData] = useState(null);
-  const [currentPage, setCurrentPage] = useState(0);
+  const [currentPage, setCurrentPage] = useState(0); // This represents the right-side page
   const [section, setSection] = useState('book'); // 'book', 'reel', 'video'
   const reelRef = useRef(null);
+  
+  // Rotating Wheel Logic
+  const wheelRotate = useMotionValue(0);
+  const springRotate = useSpring(wheelRotate, { stiffness: 100, damping: 30 });
   
   useEffect(() => {
     const loadData = async () => {
@@ -16,6 +19,19 @@ const TimeCapsule = () => {
     };
     loadData();
   }, []);
+
+  // Update reel scroll when wheel rotates
+  useEffect(() => {
+    const unsubscribe = springRotate.on("change", (latest) => {
+      if (reelRef.current) {
+        const maxScroll = reelRef.current.scrollWidth - window.innerWidth;
+        // Map rotation to scroll position (linear)
+        const scrollPos = (latest * 2) % maxScroll; 
+        reelRef.current.scrollLeft = Math.abs(scrollPos);
+      }
+    });
+    return () => unsubscribe();
+  }, [springRotate]);
 
   if (!data) return <div className="min-h-screen flex items-center justify-center font-serif italic text-stone-400">Opening the archive...</div>;
 
@@ -29,134 +45,178 @@ const TimeCapsule = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#fdfbf7] overflow-hidden">
+    <div className="min-h-screen bg-[#fdfbf7] overflow-hidden selection:bg-accent/20">
       <AnimatePresence mode="wait">
         {section === 'book' && (
           <motion.section 
             key="book"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0, scale: 1.1 }}
-            className="h-screen flex flex-col items-center justify-center p-4"
+            exit={{ opacity: 0, scale: 0.9, rotateY: -20 }}
+            className="h-screen flex flex-col items-center justify-center p-4 relative"
           >
-            <div className="text-center mb-12">
-              <span className="text-accent uppercase tracking-[0.4em] text-[10px] mb-4 block italic font-medium">Chapter I</span>
-              <h1 className="text-4xl md:text-6xl font-serif italic text-ink">The Book of Memories</h1>
+            {/* Background Decorations */}
+            <div className="absolute top-10 left-10 w-32 h-32 opacity-40 pointer-events-none rotate-[-15deg]">
+              <img src="/decorations.png" className="w-full h-full object-contain" alt="" />
+            </div>
+            <div className="absolute bottom-10 right-10 w-48 h-48 opacity-30 pointer-events-none rotate-[20deg] flip-x">
+              <img src="/decorations.png" className="w-full h-full object-contain" alt="" />
             </div>
 
-            <div className="relative perspective-1000 w-full max-w-2xl aspect-[4/3] group">
-              <AnimatePresence mode="wait">
-                <motion.div 
-                  key={currentPage}
-                  initial={{ rotateY: 90, opacity: 0 }}
-                  animate={{ rotateY: 0, opacity: 1 }}
-                  exit={{ rotateY: -90, opacity: 0 }}
-                  transition={{ duration: 0.6, ease: "easeInOut" }}
-                  className="w-full h-full bg-white shadow-2xl rounded-sm overflow-hidden border border-stone-100 flex items-center justify-center relative"
-                  style={{ transformStyle: 'preserve-3d' }}
-                >
-                  {/* Page texture overlay */}
-                  <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/notebook.png')]"></div>
-                  
-                  {bookImages[currentPage] ? (
-                    <img src={bookImages[currentPage]} alt={`Page ${currentPage}`} className="w-full h-full object-cover p-8 md:p-12" />
-                  ) : (
-                    <div className="text-stone-300 font-serif italic text-xl">A blank page for a quiet thought.</div>
-                  )}
+            <div className="text-center mb-8 z-10">
+              <span className="text-accent uppercase tracking-[0.5em] text-[10px] mb-2 block italic font-bold">The Archive</span>
+              <h1 className="text-5xl md:text-7xl font-serif italic text-ink">Book of Memories</h1>
+            </div>
 
-                  {/* Page number */}
-                  <div className="absolute bottom-4 right-8 font-serif italic text-stone-300 text-sm">{currentPage + 1} / {Math.max(bookImages.length, 1)}</div>
-                </motion.div>
-              </AnimatePresence>
+            {/* 3D BOOK CONTAINER */}
+            <div className="relative perspective-2000 w-full max-w-4xl aspect-[1.4/1] flex items-center justify-center">
+              <div className="relative w-[85%] h-[85%] flex shadow-[0_50px_100px_-20px_rgba(0,0,0,0.3)] bg-stone-100 rounded-md">
+                
+                {/* Left Page (Fixed/Back) - Shows the PREVIOUS page */}
+                <div className="w-1/2 h-full bg-[#faf7f2] border-r border-stone-200 shadow-inner relative overflow-hidden rounded-l-md">
+                   <div className="absolute inset-0 opacity-[0.05] bg-[url('https://www.transparenttextures.com/patterns/notebook.png')]"></div>
+                   {currentPage > 0 ? (
+                     <img 
+                        src={bookImages[currentPage - 1]} 
+                        className="w-full h-full object-cover p-6 grayscale-[0.2]" 
+                        alt=""
+                     />
+                   ) : (
+                     <div className="w-full h-full flex items-center justify-center p-12 text-center">
+                        <p className="font-serif italic text-stone-300 text-lg leading-relaxed">Turn the page to begin the journey.</p>
+                     </div>
+                   )}
+                </div>
 
-              {/* Navigation buttons */}
-              <div className="absolute top-1/2 -left-12 -translate-y-1/2">
-                <button 
-                  onClick={() => setCurrentPage(prev => Math.max(0, prev - 1))}
-                  className={`w-10 h-10 flex items-center justify-center rounded-full border border-stone-200 text-stone-300 hover:text-ink transition-colors ${currentPage === 0 ? 'opacity-0 pointer-events-none' : ''}`}
-                >
-                  &larr;
-                </button>
+                {/* Right Page (Fixed/Base) - Shows the CURRENT page */}
+                <div className="w-1/2 h-full bg-[#faf7f2] shadow-inner relative overflow-hidden rounded-r-md">
+                   <div className="absolute inset-0 opacity-[0.05] bg-[url('https://www.transparenttextures.com/patterns/notebook.png')]"></div>
+                   <img 
+                      src={bookImages[currentPage]} 
+                      className="w-full h-full object-cover p-6 grayscale-[0.2]" 
+                      alt=""
+                   />
+                </div>
+
+                {/* FLIPPING PAGE LEAF */}
+                <AnimatePresence mode="wait">
+                  <motion.div 
+                    key={currentPage}
+                    initial={{ rotateY: 0 }}
+                    animate={{ rotateY: -180 }}
+                    transition={{ duration: 0.8, ease: "easeInOut" }}
+                    style={{ transformOrigin: "left center", left: "50%" }}
+                    className="absolute top-0 w-1/2 h-full preserve-3d z-20 pointer-events-none"
+                  >
+                    {/* Front of flipping page (facing right, shows old right image) */}
+                    <div className="absolute inset-0 backface-hidden bg-[#faf7f2] border-l border-stone-100 shadow-xl overflow-hidden">
+                      <div className="absolute inset-0 opacity-[0.05] bg-[url('https://www.transparenttextures.com/patterns/notebook.png')]"></div>
+                      <img src={bookImages[currentPage - 1]} className="w-full h-full object-cover p-6" alt="" />
+                    </div>
+                    
+                    {/* Back of flipping page (facing left, shows the image that just moved to left) */}
+                    <div className="absolute inset-0 bg-[#faf7f2] border-r border-stone-100 shadow-xl overflow-hidden" style={{ transform: "rotateY(180deg)" }}>
+                      <div className="absolute inset-0 opacity-[0.05] bg-[url('https://www.transparenttextures.com/patterns/notebook.png')]"></div>
+                      <img src={bookImages[currentPage - 1]} className="w-full h-full object-cover p-6" alt="" />
+                    </div>
+                  </motion.div>
+                </AnimatePresence>
+
+                {/* Book Spine Shadow */}
+                <div className="absolute left-1/2 top-0 bottom-0 w-8 -translate-x-1/2 bg-gradient-to-r from-black/10 via-transparent to-black/10 z-30 pointer-events-none"></div>
               </div>
-              <div className="absolute top-1/2 -right-12 -translate-y-1/2">
-                <button 
-                  onClick={() => {
-                    if (currentPage < bookImages.length - 1) setCurrentPage(prev => prev + 1);
-                    else nextSection();
-                  }}
-                  className="w-10 h-10 flex items-center justify-center rounded-full border border-stone-200 text-stone-300 hover:text-ink transition-colors"
-                >
+
+              {/* Navigation Controls */}
+              <button 
+                onClick={() => setCurrentPage(p => Math.max(0, p - 1))}
+                className="absolute left-4 top-1/2 -translate-y-1/2 w-16 h-16 rounded-full bg-white/80 border border-stone-100 shadow-lg text-stone-400 hover:text-accent transition-all z-40 group"
+              >
+                <span className="text-2xl group-hover:-translate-x-1 inline-block transition-transform">&larr;</span>
+              </button>
+              <button 
+                onClick={() => {
+                  if (currentPage < bookImages.length - 1) setCurrentPage(p => p + 1);
+                  else nextSection();
+                }}
+                className="absolute right-4 top-1/2 -translate-y-1/2 w-16 h-16 rounded-full bg-white/80 border border-stone-100 shadow-lg text-stone-400 hover:text-accent transition-all z-40 group"
+              >
+                <span className="text-2xl group-hover:translate-x-1 inline-block transition-transform">
                   {currentPage === bookImages.length - 1 ? '↓' : '→'}
-                </button>
-              </div>
+                </span>
+              </button>
             </div>
 
-            <motion.p 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 1 }}
-              className="mt-12 text-stone-400 text-[10px] uppercase tracking-widest italic"
-            >
-              Swipe or use arrows to flip through time.
-            </motion.p>
+            <div className="mt-8 flex gap-4">
+              {bookImages.map((_, i) => (
+                <div key={i} className={`w-2 h-2 rounded-full transition-all duration-500 ${i === currentPage ? 'bg-accent w-6' : 'bg-stone-200'}`} />
+              ))}
+            </div>
           </motion.section>
         )}
 
         {section === 'reel' && (
           <motion.section 
             key="reel"
-            initial={{ opacity: 0, x: 100 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, y: -100 }}
-            className="h-screen flex flex-col items-center justify-center bg-[#1a1917] relative overflow-hidden"
+            initial={{ opacity: 0, y: 100 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 1.1 }}
+            className="h-screen flex flex-col items-center justify-center bg-[#0a0a0a] relative overflow-hidden"
           >
-            <div className="text-center mb-16 z-10">
-              <span className="text-stone-500 uppercase tracking-[0.4em] text-[10px] mb-4 block italic font-medium">Chapter II</span>
-              <h1 className="text-4xl md:text-6xl font-serif italic text-white">The Cinematic Reel</h1>
+            <div className="text-center mb-12 z-10">
+              <span className="text-stone-600 uppercase tracking-[0.6em] text-[10px] mb-2 block font-bold">The Projection</span>
+              <h1 className="text-5xl md:text-7xl font-serif italic text-white/90">Cinematic Reel</h1>
             </div>
 
             {/* Reel Container */}
-            <div className="w-full relative py-12">
-              <div className="absolute inset-y-0 left-0 w-32 bg-gradient-to-r from-[#1a1917] to-transparent z-10"></div>
-              <div className="absolute inset-y-0 right-0 w-32 bg-gradient-to-l from-[#1a1917] to-transparent z-10"></div>
+            <div className="w-full relative flex items-center">
               
-              <motion.div 
+              {/* FIXED REEL WHEEL (Left Side) */}
+              <div className="absolute left-10 md:left-24 z-20 flex flex-col items-center">
+                <motion.div 
+                  drag="x"
+                  onDrag={(e, info) => wheelRotate.set(wheelRotate.get() + info.delta.x * 2)}
+                  style={{ rotate: springRotate }}
+                  className="w-64 h-64 md:w-80 md:h-80 cursor-grab active:cursor-grabbing group relative"
+                >
+                  <img src="/reel_wheel.png" className="w-full h-full object-contain drop-shadow-[0_0_30px_rgba(255,255,255,0.1)]" alt="Film Reel" />
+                  <div className="absolute inset-0 rounded-full border-4 border-transparent group-hover:border-accent/20 transition-colors pointer-events-none" />
+                </motion.div>
+                <p className="text-stone-600 text-[10px] uppercase tracking-[0.4em] mt-8 font-bold">Turn to relive</p>
+              </div>
+
+              {/* The Scrolling Strip */}
+              <div 
                 ref={reelRef}
-                drag="x"
-                dragConstraints={{ left: -((reelImages.length || 1) * 350), right: 0 }}
-                className="flex gap-4 px-32 cursor-grab active:cursor-grabbing"
+                className="w-full flex gap-12 pl-[40%] md:pl-[35%] pr-20 overflow-x-hidden py-20"
               >
-                {reelImages.length > 0 ? reelImages.map((img, i) => (
-                  <div key={i} className="flex-shrink-0 w-[300px] md:w-[400px] aspect-video bg-stone-900 border-y-8 border-dashed border-stone-800 relative overflow-hidden group">
-                    <img src={img} alt={`Reel ${i}`} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity duration-700 grayscale group-hover:grayscale-0" />
-                    <div className="absolute top-2 left-2 text-[8px] text-stone-600 font-mono">FRAME {i + 1024}</div>
-                  </div>
-                )) : (
-                  [1,2,3,4].map(i => (
-                    <div key={i} className="flex-shrink-0 w-[300px] md:w-[400px] aspect-video bg-stone-900 border-y-8 border-dashed border-stone-800 flex items-center justify-center">
-                      <div className="w-12 h-12 border border-stone-800 rounded-full animate-pulse"></div>
-                    </div>
-                  ))
-                )}
-              </motion.div>
+                {reelImages.map((img, i) => (
+                  <motion.div 
+                    key={i} 
+                    className="flex-shrink-0 w-[400px] md:w-[600px] aspect-video bg-stone-900 border-y-[20px] border-dashed border-stone-800 relative shadow-[0_0_50px_rgba(0,0,0,0.5)] group overflow-hidden"
+                  >
+                    <img src={img} alt={`Frame ${i}`} className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-all duration-1000 grayscale group-hover:grayscale-0" />
+                    <div className="absolute top-4 left-4 text-[10px] text-stone-700 font-mono tracking-tighter uppercase">SAFETY FILM • {i + 1990}</div>
+                  </motion.div>
+                ))}
+              </div>
+
+              {/* Gradient Mask to make film look like it's coming out of the reel */}
+              <div className="absolute left-[30%] top-0 bottom-0 w-40 bg-gradient-to-r from-[#0a0a0a] to-transparent z-10 pointer-events-none"></div>
             </div>
 
-            <div className="mt-20 z-10">
-              <button 
-                onClick={nextSection}
-                className="group flex flex-col items-center gap-4"
-              >
-                <p className="text-stone-500 italic font-serif text-xl group-hover:text-white transition-colors duration-500">"But this isn't everything..."</p>
-                <div className="btn-primary border-white text-white hover:bg-white hover:text-black">Relive More &darr;</div>
-              </button>
-            </div>
+            <button 
+              onClick={nextSection}
+              className="mt-16 btn-primary border-white text-white hover:bg-white hover:text-black px-12 z-20"
+            >
+              Relive More &darr;
+            </button>
 
-            {/* Film grain effect */}
-            <div className="absolute inset-0 pointer-events-none opacity-[0.05] mix-blend-overlay bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]"></div>
+            {/* Film Dust & Scratches Overlay */}
+            <div className="absolute inset-0 pointer-events-none opacity-[0.1] mix-blend-screen bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]"></div>
           </motion.section>
         )}
 
-        {section === 'video' && (
+        {section === 'video' && ( section === 'video' && (
           <motion.section 
             key="video"
             initial={{ opacity: 0 }}
@@ -164,31 +224,34 @@ const TimeCapsule = () => {
             className="h-screen bg-black flex items-center justify-center relative overflow-hidden"
           >
             {finalVideo ? (
-              <div className="relative w-full h-full">
+              <div className="relative w-full h-full max-w-6xl aspect-video rounded-lg overflow-hidden shadow-[0_0_100px_rgba(0,0,0,0.8)]">
                 <video 
                   src={finalVideo} 
                   autoPlay 
-                  muted={false} 
+                  loop
                   playsInline 
                   className="w-full h-full object-cover"
-                  onEnded={() => setSection('book')} // Optional: loop back or show finish
                 />
-                {/* Immersive overlays */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black opacity-60"></div>
-                <div className="absolute inset-0 shadow-[inset_0_0_150px_rgba(0,0,0,0.8)]"></div>
+                {/* Vignette & Gradients */}
+                <div className="absolute inset-0 shadow-[inset_0_0_200px_rgba(0,0,0,0.9)]"></div>
+                <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-black to-transparent"></div>
               </div>
             ) : (
-              <div className="text-center p-8">
-                <h2 className="text-2xl md:text-4xl font-serif italic text-stone-600">Final memory will appear here.</h2>
-                <button onClick={() => setSection('book')} className="mt-8 btn-primary border-stone-700 text-stone-700">Return to Archive</button>
+              <div className="text-center space-y-8">
+                 <h2 className="text-3xl md:text-5xl font-serif italic text-stone-700">The end of the archive.</h2>
+                 <button onClick={() => setSection('book')} className="btn-primary border-stone-800 text-stone-800">Restart Journey</button>
               </div>
             )}
-
-            {/* Grain & Noise */}
-            <div className="absolute inset-0 pointer-events-none opacity-[0.1] mix-blend-overlay bg-[url('https://www.transparenttextures.com/patterns/asfalt-dark.png')]"></div>
           </motion.section>
-        )}
+        ))}
       </AnimatePresence>
+
+      <style jsx>{`
+        .perspective-2000 { perspective: 2000px; }
+        .preserve-3d { transform-style: preserve-3d; }
+        .backface-hidden { backface-visibility: hidden; }
+        .flip-x { transform: scaleX(-1); }
+      `}</style>
     </div>
   );
 };
