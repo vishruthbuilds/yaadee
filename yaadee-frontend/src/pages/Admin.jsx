@@ -27,8 +27,16 @@ const Admin = () => {
   const [resultsPollId, setResultsPollId] = useState(null);
 
   useEffect(() => {
+    const adminSession = localStorage.getItem('yaadee_admin_auth');
+    if (adminSession === 'true') {
+      setIsAuthenticated(true);
+    }
+  }, []);
+
+  useEffect(() => {
     if (isAuthenticated) {
       loadAllData();
+      localStorage.setItem('yaadee_admin_auth', 'true');
     }
   }, [isAuthenticated]);
 
@@ -187,7 +195,18 @@ const Admin = () => {
 
   return (
     <div className="min-h-screen p-4 md:p-8 max-w-7xl mx-auto">
-      <h1 className="font-serif text-3xl md:text-5xl text-center mb-8 md:mb-12">Admin Dashboard</h1>
+      <div className="flex flex-col md:flex-row items-center justify-center relative mb-8 md:mb-12">
+        <h1 className="font-serif text-3xl md:text-5xl text-center">Admin Dashboard</h1>
+        <button 
+          onClick={() => {
+            localStorage.removeItem('yaadee_admin_auth');
+            setIsAuthenticated(false);
+          }}
+          className="md:absolute right-0 mt-4 md:mt-0 text-sm font-bold text-stone-400 hover:text-red-500 transition-colors uppercase tracking-widest"
+        >
+          Logout &times;
+        </button>
+      </div>
       
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
         
