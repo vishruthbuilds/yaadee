@@ -194,3 +194,65 @@ export const deleteQuestion = async (id) => {
   if (error) console.error('Error deleting question:', error);
   return data;
 };
+
+// --- New Supabase Migration Functions ---
+
+export const addOpinion = async (text, authorName) => {
+  const { data, error } = await supabase.from('opinions').insert([
+    { id: crypto.randomUUID(), text, authorName: authorName || 'Anonymous', created_at: new Date().toISOString() }
+  ]).select();
+  if (error) console.error('Error adding opinion:', error);
+  return { data, error };
+};
+
+export const addAnonymousMessage = async (text) => {
+  const { data, error } = await supabase.from('anonymous').insert([
+    { id: crypto.randomUUID(), text, created_at: new Date().toISOString() }
+  ]).select();
+  if (error) console.error('Error adding anonymous message:', error);
+  return { data, error };
+};
+
+export const addScrapbookMessage = async (userId, text, from) => {
+  // First fetch current scrapbook
+  const { data: existing } = await supabase.from('scrapbook').select('*').eq('userId', userId).single();
+  
+  const newMessage = {
+    id: crypto.randomUUID(),
+    text,
+    from: from || 'Anonymous',
+    timestamp: new Date().toISOString()
+  };
+
+  if (existing) {
+    const updatedMessages = [...(existing.messages || []), newMessage];
+    const { data, error } = await supabase.from('scrapbook')
+      .update({ messages: updatedMessages })
+      .eq('userId', userId)
+      .select();
+    return { data, error };
+  } else {
+    const { data, error } = await supabase.from('scrapbook').insert([
+      { userId, messages: [newMessage], photos: [] }
+    ]).select();
+    return { data, error };
+  }
+};
+
+export const addScrapbookPhoto = async (userId, photoUrl) => {
+  const { data: existing } = await supabase.from('scrapbook').select('*').eq('userId', userId).single();
+  
+  if (existing) {
+    const updatedPhotos = [...(existing.photos || []), photoUrl];
+    const { data, error } = await supabase.from('scrapbook')
+      .update({ photos: updatedPhotos })
+      .eq('userId', userId)
+      .select();
+    return { data, error };
+  } else {
+    const { data, error } = await supabase.from('scrapbook').insert([
+      { userId, messages: [], photos: [photoUrl] }
+    ]).select();
+    return { data, error };
+  }
+};

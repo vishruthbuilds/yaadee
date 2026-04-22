@@ -29,7 +29,11 @@ const Scrapbook = () => {
       <div style={styles.grid}>
         {currentUser?.photoUrl && (
           <motion.div className="polaroid" initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring' }}>
-            <img src={`http://localhost:5000${currentUser.photoUrl}`} alt="Main" />
+            <img 
+              src={currentUser.photoUrl.startsWith('/') ? currentUser.photoUrl : currentUser.photoUrl} 
+              alt="Main" 
+              onError={(e) => { e.target.style.display = 'none'; }}
+            />
             <p className="caption">Me!</p>
           </motion.div>
         )}
@@ -43,7 +47,11 @@ const Scrapbook = () => {
             viewport={{ once: true }}
             transition={{ type: 'spring', delay: index * 0.1 }}
           >
-            <img src={`http://localhost:5000${photo}`} alt="Memory" />
+            <img 
+              src={photo.startsWith('/') ? photo : photo} 
+              alt="Memory" 
+              onError={(e) => { e.target.src = 'https://via.placeholder.com/300?text=Memory+Missing'; }}
+            />
             <p className="caption">Memory #{index + 1}</p>
           </motion.div>
         ))}

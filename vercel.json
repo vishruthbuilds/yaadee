@@ -1,0 +1,8 @@
+{
+  "buildCommand": "cd yaadee-frontend && npm install && npm run build",
+  "outputDirectory": "yaadee-frontend/dist",
+  "framework": "vite",
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/yaadee-frontend/$1" }
+  ]
+}
