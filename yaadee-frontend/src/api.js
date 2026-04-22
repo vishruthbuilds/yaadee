@@ -256,3 +256,29 @@ export const addScrapbookPhoto = async (userId, photoUrl) => {
     return { data, error };
   }
 };
+
+export const fetchTimeCapsule = async () => {
+  const { data, error } = await supabase.from('time_capsule').select('*').single();
+  if (error && error.code !== 'PGRST116') { // PGRST116 is "No rows found"
+    console.error('Error fetching time capsule:', error);
+  }
+  return data || { book_images: [], reel_images: [], final_video: null };
+};
+
+export const updateTimeCapsule = async (updates) => {
+  // Try to update the first row
+  const { data: existing } = await supabase.from('time_capsule').select('id').single();
+  
+  if (existing) {
+    const { data, error } = await supabase.from('time_capsule')
+      .update(updates)
+      .eq('id', existing.id)
+      .select();
+    return { data, error };
+  } else {
+    const { data, error } = await supabase.from('time_capsule')
+      .insert([updates])
+      .select();
+    return { data, error };
+  }
+};

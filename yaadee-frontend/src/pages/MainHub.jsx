@@ -18,7 +18,7 @@ const MainHub = () => {
   const features = [
     { id: 'wall', title: 'Wall of Fame', desc: 'Live titles & polls', path: '/wall-of-fame', rotation: 'polaroid-rotate-left' },
     { id: 'throwbacks', title: 'Throwbacks', desc: 'Captured memories', path: '/throwbacks', rotation: 'polaroid-rotate-right' },
-    { id: 'confessions', title: 'Confessions', desc: 'Unspoken words', path: '/confessions', rotation: 'polaroid-rotate-left' },
+    { id: 'time-capsule', title: 'Time Capsule', desc: 'A journey through time', path: '/time-capsule', rotation: 'polaroid-rotate-left' },
     { id: 'chaos', title: 'Class Chaos', desc: 'Who did what?', path: '/chaos', rotation: 'polaroid-rotate-right' },
   ];
 

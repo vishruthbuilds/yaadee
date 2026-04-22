@@ -14,6 +14,8 @@ import Opinions from './pages/Opinions';
 import Admin from './pages/Admin';
 import AdminUsers from './pages/AdminUsers';
 import AdminPolls from './pages/AdminPolls';
+import TimeCapsule from './pages/TimeCapsule';
+import AdminTimeCapsule from './pages/AdminTimeCapsule';
 import WallOfFame from './pages/WallOfFame';
 
 function App() {
@@ -40,9 +42,11 @@ function App() {
           <Route path="/scrapbook/:id" element={<Scrapbook />} />
           <Route path="/throwbacks" element={<Gallery />} />
           <Route path="/confessions" element={<Opinions />} />
+          <Route path="/time-capsule" element={<TimeCapsule />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="/admin/users" element={<AdminUsers />} />
           <Route path="/admin/polls" element={<AdminPolls />} />
+          <Route path="/admin/time-capsule" element={<AdminTimeCapsule />} />
           <Route path="/wall-of-fame" element={<WallOfFame />} />
         </Routes>
       </AnimatePresence>

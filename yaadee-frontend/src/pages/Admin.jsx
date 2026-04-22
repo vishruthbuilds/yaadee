@@ -281,6 +281,24 @@ const Admin = () => {
           </div>
         </div>
 
+        {/* BOX 4: TIME CAPSULE */}
+        <div className="paper-cutout p-6 lg:col-span-2">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="flex-1">
+              <h2 className="font-serif text-2xl mb-2 text-accent italic">Time Capsule Manager</h2>
+              <p className="text-stone-500 text-sm leading-relaxed max-w-2xl">
+                The ultimate interactive memory journey. Configure the 3D flipping book, the horizontal cinematic reel, and the final immersive video memory.
+              </p>
+            </div>
+            <button 
+              onClick={() => window.location.href = '/admin/time-capsule'} 
+              className="bg-ink text-paper py-4 px-8 rounded-sm font-bold hover:bg-stone-700 transition shadow-xl whitespace-nowrap"
+            >
+              ⏳ Configure Time Capsule &rarr;
+            </button>
+          </div>
+        </div>
+
       </div>
     </div>
   );
