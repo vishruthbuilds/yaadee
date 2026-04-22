@@ -25,17 +25,17 @@ const MainHub = () => {
   if (!user) return null;
 
   return (
-    <div className="min-h-screen flex flex-col items-center py-16 px-6 max-w-5xl mx-auto relative">
+    <div className="min-h-screen flex flex-col items-center py-12 md:py-16 px-4 md:px-6 max-w-5xl mx-auto relative">
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="text-center mb-16"
+        className="text-center mb-12 md:mb-16"
       >
-        <h1 className="text-5xl md:text-6xl font-serif mb-4">Welcome, <span className="italic">{user.name}</span></h1>
-        <p className="text-xl text-stone-500 font-sans tracking-wide">Let's go back for a bit.</p>
+        <h1 className="text-4xl md:text-6xl font-serif mb-4">Welcome, <span className="italic">{user.name}</span></h1>
+        <p className="text-lg md:text-xl text-stone-500 font-sans tracking-wide">Let's go back for a bit.</p>
       </motion.div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-12 w-full mb-auto z-10">
+ 
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 w-full mb-auto z-10">
         {features.map((feature, index) => (
           <motion.div
             key={feature.id}
@@ -43,7 +43,7 @@ const MainHub = () => {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: index * 0.1 }}
             onClick={() => navigate(feature.path)}
-            className={`paper-cutout cursor-pointer hover:shadow-xl hover:border-stone-300 flex flex-col justify-center items-center h-48 relative overflow-hidden group ${feature.rotation}`}
+            className={`paper-cutout cursor-pointer hover:shadow-xl hover:border-stone-300 flex flex-col justify-center items-center h-40 md:h-48 relative overflow-hidden group ${feature.rotation}`}
           >
             {/* Texture overlay */}
             <div className="absolute inset-0 bg-stone-100/50 mix-blend-multiply opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>

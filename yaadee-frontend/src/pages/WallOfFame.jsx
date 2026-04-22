@@ -8,7 +8,7 @@ const WallOfFame = () => {
       <motion.h1 
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="font-serif text-5xl mb-6 text-ink"
+        className="font-serif text-4xl md:text-5xl mb-6 text-ink"
       >
         Wall of Fame
       </motion.h1>

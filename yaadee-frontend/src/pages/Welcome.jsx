@@ -28,20 +28,20 @@ const Welcome = () => {
         initial={{ opacity: 0, rotate: -10 }} 
         animate={{ opacity: 0.4, rotate: -15 }} 
         transition={{ duration: 2, delay: 0.5 }}
-        className="absolute top-20 left-20 w-32 h-32 bg-[#e6dfd1] rounded-sm shadow-sm z-0"
+        className="absolute top-10 left-5 md:top-20 md:left-20 w-24 h-24 md:w-32 md:h-32 bg-[#e6dfd1] rounded-sm shadow-sm z-0"
       ></motion.div>
       <motion.div 
         initial={{ opacity: 0, rotate: 10 }} 
         animate={{ opacity: 0.3, rotate: 20 }} 
         transition={{ duration: 2, delay: 0.8 }}
-        className="absolute bottom-20 right-20 w-48 h-48 bg-[#e8e2d4] rounded-sm shadow-sm z-0"
+        className="absolute bottom-10 right-5 md:bottom-20 md:right-20 w-32 h-32 md:w-48 md:h-48 bg-[#e8e2d4] rounded-sm shadow-sm z-0"
       ></motion.div>
 
       <motion.div 
         variants={containerVariants}
         initial="hidden"
         animate="visible"
-        className="relative z-10 text-center max-w-2xl px-6 paper-cutout"
+        className="relative z-10 text-center max-w-2xl px-4 md:px-6 mx-4 py-12 paper-cutout"
       >
         <motion.p variants={itemVariants} className="text-stone-500 uppercase tracking-widest text-sm mb-4">
           Welcome

@@ -175,7 +175,7 @@ const LivePoll = () => {
           
           {isPollLive ? (
             <div>
-              <div className={`text-center font-sans text-6xl font-bold mb-6 transition-colors ${timeLeft <= 10 ? 'text-red-500 animate-pulse' : 'text-stone-300'}`}>
+              <div className={`text-center font-sans text-4xl md:text-6xl font-bold mb-6 transition-colors ${timeLeft <= 10 ? 'text-red-500 animate-pulse' : 'text-stone-300'}`}>
                 {timeLeft}s
               </div>
 

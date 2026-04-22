@@ -38,13 +38,13 @@ const SelectUser = () => {
   };
 
   return (
-    <div className="min-h-screen p-8 max-w-2xl mx-auto flex flex-col items-center pt-24">
+    <div className="min-h-screen p-4 md:p-8 max-w-2xl mx-auto flex flex-col items-center pt-16 md:pt-24">
       <motion.div 
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         className="w-full text-center relative"
       >
-        <h1 className="text-4xl md:text-5xl font-serif mb-8 text-ink">Identify yourself</h1>
+        <h1 className="text-3xl md:text-5xl font-serif mb-8 text-ink">Identify yourself</h1>
         
         {loading ? (
           <div className="font-serif text-xl text-stone-500">Checking the records...</div>

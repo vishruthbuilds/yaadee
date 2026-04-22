@@ -62,10 +62,10 @@ const AdminUsers = () => {
   };
 
   return (
-    <div className="min-h-screen p-8 max-w-4xl mx-auto pt-24">
-      <div className="flex items-center justify-between mb-8">
-        <h1 className="font-serif text-4xl text-ink">All Listed People</h1>
-        <button onClick={() => navigate('/admin')} className="btn-primary py-2 px-4 text-sm">
+    <div className="min-h-screen p-4 md:p-8 max-w-4xl mx-auto pt-16 md:pt-24">
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 gap-4">
+        <h1 className="font-serif text-3xl md:text-4xl text-ink">All Listed People</h1>
+        <button onClick={() => navigate('/admin')} className="btn-primary py-2 px-4 text-sm w-full md:w-auto">
           Back to Admin
         </button>
       </div>
@@ -108,18 +108,18 @@ const AdminUsers = () => {
                     </div>
                   </div>
                 ) : (
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div className="flex items-center gap-4 w-full">
                       {u.photoUrl ? (
-                        <img src={u.photoUrl} alt="profile" className="w-14 h-14 object-cover rounded-full shadow-sm" />
+                        <img src={u.photoUrl} alt="profile" className="w-12 h-12 md:w-14 md:h-14 object-cover rounded-full shadow-sm" />
                       ) : (
-                        <div className="w-14 h-14 bg-stone-200 rounded-full flex items-center justify-center font-serif text-stone-500 text-xl shadow-sm">{u.name.charAt(0)}</div>
+                        <div className="w-12 h-12 md:w-14 md:h-14 bg-stone-200 rounded-full flex items-center justify-center font-serif text-stone-500 text-lg md:text-xl shadow-sm">{u.name.charAt(0)}</div>
                       )}
-                      <span className="font-serif font-bold text-2xl">{u.name}</span>
+                      <span className="font-serif font-bold text-xl md:text-2xl break-all">{u.name}</span>
                     </div>
-                    <div className="flex gap-3">
-                      <button onClick={() => handleStartEditUser(u)} className="bg-blue-50 text-blue-600 border border-blue-200 hover:bg-blue-100 font-bold px-4 py-2 rounded-sm transition">Edit</button>
-                      <button onClick={() => handleDeleteUser(u.id)} className="bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 font-bold px-4 py-2 rounded-sm transition">Delete</button>
+                    <div className="flex gap-2 w-full sm:w-auto">
+                      <button onClick={() => handleStartEditUser(u)} className="flex-1 sm:flex-none bg-blue-50 text-blue-600 border border-blue-200 hover:bg-blue-100 font-bold px-4 py-2 rounded-sm transition">Edit</button>
+                      <button onClick={() => handleDeleteUser(u.id)} className="flex-1 sm:flex-none bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 font-bold px-4 py-2 rounded-sm transition">Delete</button>
                     </div>
                   </div>
                 )}

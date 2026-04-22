@@ -22,7 +22,7 @@ const Gallery = () => {
       <motion.h1 
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="font-serif text-5xl text-center mb-16 text-ink"
+        className="font-serif text-4xl md:text-5xl text-center mb-12 md:mb-16 text-ink"
       >
         Throwbacks
       </motion.h1>

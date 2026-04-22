@@ -22,11 +22,11 @@ const Scrapbook = () => {
   if (!scrapbook) return <PageWrapper><h2>Loading your memories...</h2></PageWrapper>;
 
   return (
-    <PageWrapper style={styles.page}>
-      <h1 className="handwritten" style={styles.title}>{currentUser?.name}'s Scrapbook</h1>
-      <p style={styles.quote}>"{currentUser?.quote || 'No quote provided'}"</p>
+    <div className="max-w-4xl mx-auto p-4 md:p-8">
+      <h1 className="handwritten text-4xl md:text-7xl text-center mb-2 text-[#e6b981]">{currentUser?.name}'s Scrapbook</h1>
+      <p className="text-center text-lg md:text-xl text-stone-500 italic mb-12">"{currentUser?.quote || 'No quote provided'}"</p>
 
-      <div style={styles.grid}>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 py-8">
         {currentUser?.photoUrl && (
           <motion.div className="polaroid" initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring' }}>
             <img 
@@ -57,65 +57,26 @@ const Scrapbook = () => {
         ))}
       </div>
 
-      <div style={styles.messagesContainer}>
-        <h2 className="handwritten" style={{ fontSize: '3rem', marginBottom: '1rem' }}>Messages for you</h2>
-        {scrapbook.messages.length === 0 ? <p>No messages yet.</p> : null}
-        {scrapbook.messages.map((msg, i) => (
-          <motion.div 
-            key={msg.id} 
-            style={styles.messageNote}
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.1 }}
-          >
-            <p className="handwritten" style={{ fontSize: '1.5rem' }}>{msg.text}</p>
-            <p style={{ textAlign: 'right', marginTop: '10px', fontSize: '0.9rem', color: '#666' }}>- {msg.from}</p>
-          </motion.div>
-        ))}
+      <div className="mt-16 p-6 md:p-8 bg-white/50 rounded-2xl backdrop-blur-sm shadow-inner">
+        <h2 className="handwritten text-4xl md:text-5xl mb-6">Messages for you</h2>
+        {scrapbook.messages.length === 0 ? <p className="text-stone-400 italic">No messages yet.</p> : null}
+        <div className="flex flex-col gap-4">
+          {scrapbook.messages.map((msg, i) => (
+            <motion.div 
+              key={msg.id} 
+              className="bg-[#fef9e7] p-6 rounded-lg shadow-sm border-l-4 border-[#e6b981]"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.1 }}
+            >
+              <p className="handwritten text-xl md:text-2xl">{msg.text}</p>
+              <p className="text-right mt-3 text-sm text-stone-500">- {msg.from}</p>
+            </motion.div>
+          ))}
+        </div>
       </div>
-    </PageWrapper>
+    </div>
   );
-};
-
-const styles = {
-  page: {
-    maxWidth: '900px',
-    margin: '0 auto',
-  },
-  title: {
-    fontSize: '4.5rem',
-    textAlign: 'center',
-    marginBottom: '0.5rem',
-    color: '#e6b981'
-  },
-  quote: {
-    textAlign: 'center',
-    fontSize: '1.2rem',
-    color: '#666',
-    fontStyle: 'italic',
-    marginBottom: '3rem'
-  },
-  grid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
-    gap: '2rem',
-    padding: '2rem 0'
-  },
-  messagesContainer: {
-    marginTop: '4rem',
-    padding: '2rem',
-    background: 'rgba(255,255,255,0.5)',
-    borderRadius: '16px',
-    backdropFilter: 'blur(5px)'
-  },
-  messageNote: {
-    background: '#fef9e7',
-    padding: '20px',
-    marginBottom: '15px',
-    borderRadius: '8px',
-    boxShadow: 'var(--paper-shadow)',
-    borderLeft: '4px solid #e6b981'
-  }
 };
 
 export default Scrapbook;

@@ -35,8 +35,8 @@ const MCQ = () => {
   const question = questions[currentIndex];
 
   return (
-    <div className="min-h-screen py-16 px-6 max-w-2xl mx-auto flex flex-col items-center">
-      <h1 className="font-serif text-5xl mb-12 text-ink">Class Chaos</h1>
+    <div className="min-h-screen py-12 md:py-16 px-4 md:px-6 max-w-2xl mx-auto flex flex-col items-center">
+      <h1 className="font-serif text-4xl md:text-5xl mb-8 md:mb-12 text-ink">Class Chaos</h1>
       
       <AnimatePresence mode="wait">
         {!feedback.includes('completed') ? (

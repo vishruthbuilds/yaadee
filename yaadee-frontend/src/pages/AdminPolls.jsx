@@ -100,10 +100,10 @@ const AdminPolls = () => {
   };
 
   return (
-    <div className="min-h-screen p-8 max-w-5xl mx-auto pt-24">
-      <div className="flex items-center justify-between mb-8">
-        <h1 className="font-serif text-4xl text-ink">All Saved Polls</h1>
-        <button onClick={() => navigate('/admin')} className="btn-primary py-2 px-4 text-sm">
+    <div className="min-h-screen p-4 md:p-8 max-w-5xl mx-auto pt-16 md:pt-24">
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 gap-4">
+        <h1 className="font-serif text-3xl md:text-4xl text-ink">All Saved Polls</h1>
+        <button onClick={() => navigate('/admin')} className="btn-primary py-2 px-4 text-sm w-full md:w-auto">
           Back to Admin
         </button>
       </div>

@@ -186,10 +186,10 @@ const Admin = () => {
   }
 
   return (
-    <div className="min-h-screen p-8 max-w-7xl mx-auto">
-      <h1 className="font-serif text-5xl text-center mb-12">Admin Dashboard</h1>
+    <div className="min-h-screen p-4 md:p-8 max-w-7xl mx-auto">
+      <h1 className="font-serif text-3xl md:text-5xl text-center mb-8 md:mb-12">Admin Dashboard</h1>
       
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
         
         {/* BOX 1: USER MANAGEMENT */}
         <div className="paper-cutout p-6">
