@@ -64,7 +64,7 @@ const MainHub = () => {
         className="mt-24 text-center z-10"
       >
         <p className="font-sans text-stone-400 hover:text-stone-800 transition-colors duration-500 tracking-widest text-sm uppercase">
-          Crafted quietly by VishruthGupta
+          Crafted by Vishruth Gupta
         </p>
       </motion.div>
     </div>
