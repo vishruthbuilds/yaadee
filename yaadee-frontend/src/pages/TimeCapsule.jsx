@@ -203,7 +203,12 @@ const TimeCapsule = () => {
                   {/* The Rotating Object */}
                   <motion.div 
                     drag="x"
-                    onDrag={(e, info) => crankRotate.set(crankRotate.get() + info.delta.x * 3)}
+                    dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
+                    dragElastic={0}
+                    onDrag={(e, info) => {
+                      // Adjust sensitivity as needed
+                      crankRotate.set(crankRotate.get() + info.delta.x * 4);
+                    }}
                     style={{ rotate: springRotate }}
                     className="absolute w-full h-full flex items-center justify-center cursor-grab active:cursor-grabbing z-20"
                   >
