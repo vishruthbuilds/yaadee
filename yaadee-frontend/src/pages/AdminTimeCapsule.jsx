@@ -46,9 +46,14 @@ const AdminTimeCapsule = () => {
 
   const save = async () => {
     setSaving(true);
+    console.log('Attempting to save time capsule data:', data);
     const { error } = await updateTimeCapsule(data);
-    if (error) alert('Error saving: ' + error.message);
-    else alert('Time Capsule updated successfully!');
+    if (error) {
+      console.error('Save error:', error);
+      alert('Error saving configuration: ' + error.message + '\n\nIf the error is "relation not found", please ensure you have created the "time_capsule" table in Supabase.');
+    } else {
+      alert('Time Capsule updated successfully! Your changes are now live.');
+    }
     setSaving(false);
   };
 
