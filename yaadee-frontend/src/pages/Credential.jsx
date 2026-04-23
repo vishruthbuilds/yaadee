@@ -27,39 +27,41 @@ const Credential = () => {
 
   return (
     <PageWrapper style={styles.page}>
-      <motion.div style={styles.card} initial={{ scale: 0.9 }} animate={{ scale: 1 }}>
-        <h2 style={styles.title}>Who are you?</h2>
-        <p style={{ marginBottom: '1.5rem', color: '#666' }}>Find your name to unlock your memories.</p>
+      <motion.div className="scrapbook-card w-full max-w-md mx-auto text-center p-12" initial={{ scale: 0.9 }} animate={{ scale: 1 }}>
+        <div className="tape-mark -top-2 left-1/2 -translate-x-1/2"></div>
+        <h2 className="text-4xl md:text-5xl font-serif text-warm-brown mb-6">Who are you?</h2>
+        <p className="mb-8 text-stone-500 font-serif italic">Find your name to unlock your memories.</p>
         
-        <input 
-          type="text" 
-          placeholder="Type your name..." 
-          value={searchTerm}
-          onChange={(e) => {
-            setSearchTerm(e.target.value);
-            setSelectedUser(null);
-          }}
-          style={styles.input}
-        />
+        <div className="relative">
+          <input 
+            type="text" 
+            placeholder="Type your name..." 
+            value={searchTerm}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setSelectedUser(null);
+            }}
+            className="w-full px-6 py-4 rounded-sm border border-stone-200 bg-white focus:outline-none focus:ring-2 focus:ring-soft-yellow shadow-inner font-sans text-lg text-ink"
+          />
 
-        {searchTerm && !selectedUser && (
-          <ul style={styles.dropdown}>
-            {filteredUsers.length > 0 ? filteredUsers.map(user => (
-              <li key={user.id} style={styles.dropdownItem} onClick={() => {
-                setSelectedUser(user);
-                setSearchTerm(user.name);
-              }}>
-                {user.name}
-              </li>
-            )) : <li style={styles.dropdownItem}>No one found :(</li>}
-          </ul>
-        )}
+          {searchTerm && !selectedUser && (
+            <ul className="absolute top-full left-0 right-0 mt-1 bg-white border border-stone-200 shadow-2xl rounded-sm max-h-48 overflow-y-auto z-50 text-left">
+              {filteredUsers.length > 0 ? filteredUsers.map(user => (
+                <li key={user.id} className="px-6 py-4 border-b border-stone-50 hover:bg-soft-yellow/10 cursor-pointer transition-colors font-serif italic" onClick={() => {
+                  setSelectedUser(user);
+                  setSearchTerm(user.name);
+                }}>
+                  {user.name}
+                </li>
+              )) : <li className="px-6 py-4 text-stone-400 font-serif italic">No one found :(</li>}
+            </ul>
+          )}
+        </div>
 
         <button 
-          className="btn" 
+          className="btn-primary w-full mt-10 bg-warm-brown hover:bg-stone-800" 
           disabled={!selectedUser}
           onClick={handleProceed}
-          style={{ width: '100%', marginTop: '1rem' }}
         >
           Open My Scrapbook
         </button>
@@ -73,45 +75,7 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingTop: 0
-  },
-  card: {
-    background: 'white',
-    padding: '3rem',
-    borderRadius: '16px',
-    boxShadow: 'var(--paper-shadow)',
-    width: '100%',
-    maxWidth: '400px',
-    textAlign: 'center',
-    position: 'relative'
-  },
-  title: {
-    fontSize: '3rem',
-    color: '#e6b981'
-  },
-  input: {
-    marginBottom: 0
-  },
-  dropdown: {
-    listStyle: 'none',
-    padding: 0,
-    margin: 0,
-    border: '1px solid #ddd',
-    borderTop: 'none',
-    borderBottomLeftRadius: '8px',
-    borderBottomRightRadius: '8px',
-    maxHeight: '150px',
-    overflowY: 'auto',
-    textAlign: 'left',
-    position: 'absolute',
-    width: 'calc(100% - 6rem)',
-    background: 'white',
-    zIndex: 10
-  },
-  dropdownItem: {
-    padding: '10px 12px',
-    cursor: 'pointer',
-    borderBottom: '1px solid #f0f0f0'
+    paddingTop: '0px'
   }
 };
 

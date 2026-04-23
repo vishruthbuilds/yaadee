@@ -1,25 +1,41 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { supabase } from '../supabaseClient';
 
 const MainHub = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
 
   useEffect(() => {
-    const savedUser = localStorage.getItem('yaadee_user');
-    if (!savedUser) {
-      navigate('/select-user');
-    } else {
-      setUser(JSON.parse(savedUser));
-    }
+    const checkAuth = async () => {
+      // Check if we have a Supabase session (Google Login)
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      // Check if we have a local guest session (Select User flow)
+      const savedUser = localStorage.getItem('yaadee_user');
+      
+      if (!session && !savedUser) {
+        // No session and no local user? Go to welcome
+        navigate('/');
+        return;
+      }
+      
+      if (savedUser) {
+        setUser(JSON.parse(savedUser));
+      } else if (session) {
+        // Fallback for Google users who might not have a "person" profile yet
+        setUser({ name: session.user.user_metadata.full_name || session.user.email });
+      }
+    };
+    checkAuth();
   }, [navigate]);
 
   const features = [
     { id: 'wall', title: 'Wall of Fame', desc: 'Live titles & polls', path: '/wall-of-fame', rotation: 'polaroid-rotate-left' },
     { id: 'throwbacks', title: 'Throwbacks', desc: 'Captured memories', path: '/throwbacks', rotation: 'polaroid-rotate-right' },
     { id: 'time-capsule', title: 'Time Capsule', desc: 'A journey through time', path: '/time-capsule', rotation: 'polaroid-rotate-left' },
-    { id: 'chaos', title: 'Class Chaos', desc: 'Who did what?', path: '/chaos', rotation: 'polaroid-rotate-right' },
+    { id: 'chaos', title: 'Class Chaos', desc: 'Synchronized Gaming Mayhem', path: '/class-chaos', rotation: 'polaroid-rotate-right' },
   ];
 
   if (!user) return null;
@@ -35,7 +51,7 @@ const MainHub = () => {
         <p className="text-lg md:text-xl text-stone-500 font-sans tracking-wide">Let's go back for a bit.</p>
       </motion.div>
  
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 w-full mb-auto z-10">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16 w-full mb-auto z-10">
         {features.map((feature, index) => (
           <motion.div
             key={feature.id}
@@ -43,16 +59,20 @@ const MainHub = () => {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: index * 0.1 }}
             onClick={() => navigate(feature.path)}
-            className={`paper-cutout cursor-pointer hover:shadow-xl hover:border-stone-300 flex flex-col justify-center items-center h-40 md:h-48 relative overflow-hidden group ${feature.rotation}`}
+            className={`scrapbook-card cursor-pointer hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 flex flex-col justify-center items-center h-44 md:h-56 group ${feature.rotation}`}
           >
+            {/* Tape Mark Accent */}
+            <div className="tape-mark top-[-10px] left-1/2 -translate-x-1/2 opacity-60 group-hover:opacity-100 transition-opacity"></div>
+            
             {/* Texture overlay */}
-            <div className="absolute inset-0 bg-stone-100/50 mix-blend-multiply opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            <div className="absolute inset-0 bg-stone-100/30 mix-blend-multiply opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
             
             <h2 className="text-3xl font-serif text-ink mb-2 z-10">{feature.title}</h2>
-            <p className="text-stone-500 font-sans z-10 mb-2">{feature.desc}</p>
-            {feature.id === 'wall' && (
-              <span className="text-accent font-bold text-sm tracking-widest uppercase z-10 mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">Let's Go &rarr;</span>
-            )}
+            <p className="text-stone-500 font-sans z-10 mb-2 px-4 text-center">{feature.desc}</p>
+            
+            <div className="absolute bottom-4 right-4 text-accent/30 font-serif italic text-sm group-hover:text-accent transition-colors">
+               Explore &rarr;
+            </div>
           </motion.div>
         ))}
       </div>

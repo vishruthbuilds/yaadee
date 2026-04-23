@@ -23,7 +23,7 @@ const AdminTimeCapsule = () => {
       const reader = new FileReader();
       reader.onloadend = () => {
         if (type === 'book') {
-          setData(prev => ({ ...prev, book_images: [...prev.book_images, reader.result].slice(0, 10) }));
+          setData(prev => ({ ...prev, book_images: [...prev.book_images, reader.result] }));
         } else if (type === 'reel') {
           setData(prev => ({ ...prev, reel_images: [...prev.reel_images, reader.result] }));
         } else if (type === 'video') {
@@ -70,9 +70,9 @@ const AdminTimeCapsule = () => {
         </header>
 
         <div className="space-y-12">
-          {/* Section 1: Book Images */}
+          {/* Section 1: Archive Images */}
           <section className="paper-cutout p-8">
-            <h2 className="text-2xl font-serif italic mb-6">1. Book of Memories (Max 10)</h2>
+            <h2 className="text-2xl font-serif italic mb-6">1. Memory Archive (A4 Sheets)</h2>
             <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 mb-6">
               {data.book_images.map((img, i) => (
                 <div key={i} className="aspect-square bg-stone-100 rounded overflow-hidden relative group">
@@ -85,13 +85,11 @@ const AdminTimeCapsule = () => {
                   </button>
                 </div>
               ))}
-              {data.book_images.length < 10 && (
-                <label className="aspect-square border-2 border-dashed border-stone-200 rounded flex flex-col items-center justify-center cursor-pointer hover:bg-stone-50 transition-colors">
-                  <span className="text-3xl text-stone-300">+</span>
-                  <span className="text-[10px] text-stone-400 uppercase font-bold mt-2">Upload</span>
-                  <input type="file" multiple accept="image/*" className="hidden" onChange={(e) => handleUpload(e, 'book')} />
-                </label>
-              )}
+              <label className="aspect-square border-2 border-dashed border-stone-200 rounded flex flex-col items-center justify-center cursor-pointer hover:bg-stone-50 transition-colors">
+                <span className="text-3xl text-stone-300">+</span>
+                <span className="text-[10px] text-stone-400 uppercase font-bold mt-2">Upload</span>
+                <input type="file" multiple accept="image/*" className="hidden" onChange={(e) => handleUpload(e, 'book')} />
+              </label>
             </div>
           </section>
 

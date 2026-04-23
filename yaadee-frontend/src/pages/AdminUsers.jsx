@@ -7,7 +7,7 @@ const AdminUsers = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingUserId, setEditingUserId] = useState(null);
-  const [editUserForm, setEditUserForm] = useState({ name: '', photoUrl: '' });
+  const [editUserForm, setEditUserForm] = useState({ name: '', photoUrl: '', bio: '' });
 
   useEffect(() => {
     loadUsers();
@@ -36,12 +36,12 @@ const AdminUsers = () => {
 
   const handleStartEditUser = (u) => {
     setEditingUserId(u.id);
-    setEditUserForm({ name: u.name, photoUrl: u.photoUrl || '' });
+    setEditUserForm({ name: u.name, photoUrl: u.photoUrl || '', bio: u.quote || '' });
   };
 
   const handleSaveEditUser = async (id) => {
     if (!editUserForm.name) return alert('Name is required');
-    const result = await updateUser(id, editUserForm.name, editUserForm.photoUrl);
+    const result = await updateUser(id, editUserForm.name, editUserForm.photoUrl, editUserForm.bio);
     if (result.error) {
       alert('Error saving user: ' + result.error.message);
     } else {
@@ -80,13 +80,27 @@ const AdminUsers = () => {
             {users.map(u => (
               <div key={u.id} className="flex flex-col p-4 border border-stone-200 bg-white">
                 {editingUserId === u.id ? (
-                  <div className="flex flex-col gap-3">
-                    <input 
-                      type="text" 
-                      value={editUserForm.name} 
-                      onChange={e => setEditUserForm({...editUserForm, name: e.target.value})} 
-                      className="p-2 border border-stone-300 w-full font-sans text-lg" 
-                    />
+                  <div className="flex flex-col gap-4">
+                    <div className="space-y-1">
+                      <label className="text-xs text-stone-400 font-bold uppercase">Name</label>
+                      <input 
+                        type="text" 
+                        value={editUserForm.name} 
+                        onChange={e => setEditUserForm({...editUserForm, name: e.target.value})} 
+                        className="p-2 border border-stone-300 w-full font-sans text-lg focus:outline-none focus:border-accent" 
+                      />
+                    </div>
+                    
+                    <div className="space-y-1">
+                      <label className="text-xs text-stone-400 font-bold uppercase">Farewell Note / Bio</label>
+                      <textarea 
+                        value={editUserForm.bio} 
+                        onChange={e => setEditUserForm({...editUserForm, bio: e.target.value})} 
+                        className="p-3 border border-stone-300 w-full font-serif italic text-stone-700 min-h-[100px] focus:outline-none focus:border-accent" 
+                        placeholder="Write a heartfelt message..."
+                      />
+                    </div>
+
                     <div className="bg-stone-50 p-3 border border-stone-200">
                       <label className="text-sm text-stone-500 block mb-2 font-bold uppercase tracking-wide">Change Photo</label>
                       <input 
@@ -115,7 +129,10 @@ const AdminUsers = () => {
                       ) : (
                         <div className="w-12 h-12 md:w-14 md:h-14 bg-stone-200 rounded-full flex items-center justify-center font-serif text-stone-500 text-lg md:text-xl shadow-sm">{u.name.charAt(0)}</div>
                       )}
-                      <span className="font-serif font-bold text-xl md:text-2xl break-all">{u.name}</span>
+                      <div>
+                        <span className="font-serif font-bold text-xl md:text-2xl block">{u.name}</span>
+                        {u.quote && <p className="text-xs text-stone-400 italic line-clamp-1">"{u.quote}"</p>}
+                      </div>
                     </div>
                     <div className="flex gap-2 w-full sm:w-auto">
                       <button onClick={() => handleStartEditUser(u)} className="flex-1 sm:flex-none bg-blue-50 text-blue-600 border border-blue-200 hover:bg-blue-100 font-bold px-4 py-2 rounded-sm transition">Edit</button>

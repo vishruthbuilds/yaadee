@@ -152,16 +152,16 @@ export const unsubscribeChannel = (channel) => {
   if (channel) supabase.removeChannel(channel);
 };
 
-export const addUser = async (name, photoUrl) => {
+export const addUser = async (name, photoUrl, bio) => {
   const result = await supabase.from('users').insert([
-    { id: crypto.randomUUID(), name, photoUrl: photoUrl || null, quote: '' }
+    { id: crypto.randomUUID(), name, photoUrl: photoUrl || null, quote: bio || '' }
   ]).select();
   if (result.error) console.error('Error adding user:', result.error);
   return result;
 };
 
-export const updateUser = async (id, name, photoUrl) => {
-  const result = await supabase.from('users').update({ name, photoUrl: photoUrl || null }).eq('id', id).select();
+export const updateUser = async (id, name, photoUrl, bio) => {
+  const result = await supabase.from('users').update({ name, photoUrl: photoUrl || null, quote: bio || '' }).eq('id', id).select();
   if (result.error) console.error('Error updating user:', result.error);
   return result;
 };
@@ -281,4 +281,142 @@ export const updateTimeCapsule = async (updates) => {
       .select();
     return { data, error };
   }
+};
+
+export const fetchThrowbacks = async () => {
+  const { data, error } = await supabase.from('throwbacks').select('*');
+  if (error) console.error('Error fetching throwbacks:', error);
+  return data || [];
+};
+
+export const addThrowback = async (name, photo, bio) => {
+  const { data, error } = await supabase.from('throwbacks').insert([
+    { id: crypto.randomUUID(), name, photo, bio }
+  ]).select();
+  return { data, error };
+};
+
+export const updateThrowback = async (id, name, photo, bio) => {
+  const { data, error } = await supabase.from('throwbacks').update({ name, photo, bio }).eq('id', id).select();
+  return { data, error };
+};
+
+export const deleteThrowback = async (id) => {
+  const { error } = await supabase.from('throwbacks').delete().eq('id', id);
+  return { error };
+};
+
+// --- Class Chaos Game ---
+
+export const fetchChaosQuestions = async () => {
+  const { data, error } = await supabase.from('chaos_questions').select('*');
+  return { data, error };
+};
+
+export const addChaosQuestion = async (type, data, answer) => {
+  const { data: result, error } = await supabase.from('chaos_questions').insert([
+    { id: crypto.randomUUID(), type, data, answer }
+  ]).select();
+  return { data: result, error };
+};
+
+export const updateChaosQuestion = async (id, updates) => {
+  const { data, error } = await supabase.from('chaos_questions').update(updates).eq('id', id).select();
+  return { data, error };
+};
+
+export const deleteChaosQuestion = async (id) => {
+  const { error } = await supabase.from('chaos_questions').delete().eq('id', id);
+  return { error };
+};
+
+export const fetchChaosGameState = async () => {
+  const { data, error } = await supabase.from('chaos_game_state').select('*').single();
+  if (error && error.code === 'PGRST116') {
+    // Initialize if not exists
+    const initialState = { 
+      id: '00000000-0000-0000-0000-000000000000', 
+      status: 'lobby', 
+      current_question_index: 0, 
+      timer_remaining: 30, 
+      is_paused: false 
+    };
+    await supabase.from('chaos_game_state').insert([initialState]);
+    return { data: initialState, error: null };
+  }
+  return { data, error };
+};
+
+export const updateChaosGameState = async (updates) => {
+  const { data, error } = await supabase.from('chaos_game_state')
+    .update(updates)
+    .eq('id', '00000000-0000-0000-0000-000000000000')
+    .select();
+  return { data, error };
+};
+
+export const joinChaosGame = async (playerName) => {
+  // Check if player already exists to avoid duplicates
+  const { data: existing } = await supabase.from('chaos_players').select('*').eq('name', playerName);
+  if (existing && existing.length > 0) {
+    return { data: existing, error: null };
+  }
+
+  const { data, error } = await supabase.from('chaos_players').insert([
+    { id: crypto.randomUUID(), name: playerName, score: 0 }
+  ]).select();
+  return { data, error };
+};
+
+export const fetchChaosPlayers = async () => {
+  const { data, error } = await supabase.from('chaos_players').select('*').order('score', { ascending: false });
+  return { data, error };
+};
+
+export const submitChaosResponse = async (playerId, questionId, response) => {
+  const { data: question } = await supabase.from('chaos_questions').select('*').eq('id', questionId).single();
+  if (!question) return { error: 'Question not found' };
+
+  let points = 0;
+  if (question.type === 'timeline') {
+    // response is array of indices [0, 1, 2, 3] in user's order
+    const correctOrder = JSON.parse(question.answer); 
+    correctOrder.forEach((val, i) => {
+      if (response[i] === val) points += 5; // 5 pts per correct position
+    });
+  } else {
+    // image_guess or nickname
+    if (response.toLowerCase().trim() === question.answer.toLowerCase().trim()) {
+      points = 20; // 20 pts for correct guess
+    }
+  }
+
+  if (points > 0) {
+    const { data: player } = await supabase.from('chaos_players').select('score').eq('id', playerId).single();
+    const newScore = (player?.score || 0) + points;
+    await supabase.from('chaos_players').update({ score: newScore }).eq('id', playerId);
+  }
+  return { error: null, points };
+};
+
+export const subscribeToReactions = (callback) => {
+  const channel = supabase.channel('global-reactions');
+  channel.on('broadcast', { event: 'emoji-reaction' }, (payload) => {
+    callback(payload.payload);
+  }).subscribe();
+  return channel;
+};
+
+export const sendReaction = (emoji) => {
+  const channel = supabase.channel('global-reactions');
+  channel.send({
+    type: 'broadcast',
+    event: 'emoji-reaction',
+    payload: { emoji, id: Math.random() }
+  });
+};
+
+export const resetChaosGame = async () => {
+  await supabase.from('chaos_players').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+  return updateChaosGameState({ status: 'lobby', current_question_index: 0, timer_remaining: 30, is_paused: false });
 };

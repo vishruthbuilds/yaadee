@@ -15,12 +15,11 @@ const Admin = () => {
   const [questions, setQuestions] = useState([]);
 
   // Form states
-  const [newUser, setNewUser] = useState({ name: '', photoUrl: '' });
+  const [newUser, setNewUser] = useState({ name: '', photoUrl: '', bio: '' });
   const [editingUserId, setEditingUserId] = useState(null);
-  const [editUserForm, setEditUserForm] = useState({ name: '', photoUrl: '' });
+  const [editUserForm, setEditUserForm] = useState({ name: '', photoUrl: '', bio: '' });
   
   const [newPoll, setNewPoll] = useState({ question: '', options: '' });
-  const [newQuestion, setNewQuestion] = useState({ text: '', options: '', correctAnswer: '' });
 
   // Poll Results
   const [results, setResults] = useState(null);
@@ -82,11 +81,11 @@ const Admin = () => {
   const handleAddUser = async (e) => {
     e.preventDefault();
     if (!newUser.name) return alert('Name is required');
-    const result = await addUser(newUser.name, newUser.photoUrl);
+    const result = await addUser(newUser.name, newUser.photoUrl, newUser.bio);
     if (result.error) {
       alert('Error adding user: ' + result.error.message);
     } else {
-      setNewUser({ name: '', photoUrl: '' });
+      setNewUser({ name: '', photoUrl: '', bio: '' });
       loadAllData();
       alert('Person successfully saved!');
     }
@@ -94,12 +93,12 @@ const Admin = () => {
 
   const handleStartEditUser = (u) => {
     setEditingUserId(u.id);
-    setEditUserForm({ name: u.name, photoUrl: u.photoUrl || '' });
+    setEditUserForm({ name: u.name, photoUrl: u.photoUrl || '', bio: u.quote || '' });
   };
 
   const handleSaveEditUser = async (id) => {
     if (!editUserForm.name) return alert('Name is required');
-    await updateUser(id, editUserForm.name, editUserForm.photoUrl);
+    await updateUser(id, editUserForm.name, editUserForm.photoUrl, editUserForm.bio);
     setEditingUserId(null);
     loadAllData();
   };
@@ -155,23 +154,6 @@ const Admin = () => {
     }
   };
 
-  // --- Questions (Class Chaos) ---
-  const handleAddQuestion = async (e) => {
-    e.preventDefault();
-    const optionsArray = newQuestion.options.split(',').map(o => o.trim()).filter(o => o);
-    if (!newQuestion.text || optionsArray.length === 0 || !newQuestion.correctAnswer) return alert('All fields required');
-    
-    await addQuestion(newQuestion.text, optionsArray, newQuestion.correctAnswer);
-    setNewQuestion({ text: '', options: '', correctAnswer: '' });
-    loadAllData();
-  };
-
-  const handleDeleteQuestion = async (id) => {
-    if (window.confirm("Delete this question?")) {
-      await deleteQuestion(id);
-      loadAllData();
-    }
-  };
 
   if (!isAuthenticated) {
     return (
@@ -224,7 +206,13 @@ const Admin = () => {
           
           <form onSubmit={handleAddUser} className="mb-6 flex flex-col gap-3 bg-stone-50 p-4 border border-stone-200">
             <h3 className="font-sans font-bold text-sm text-stone-500 uppercase tracking-wider">Add New Person</h3>
-            <input type="text" placeholder="Name" value={newUser.name} onChange={e => setNewUser({...newUser, name: e.target.value})} className="p-2 border border-stone-300 w-full" />
+            <input type="text" placeholder="Name" value={newUser.name} onChange={e => setNewUser({...newUser, name: e.target.value})} className="p-2 border border-stone-300 w-full focus:outline-none focus:border-accent" />
+            <textarea 
+              placeholder="Bio / Farewell Note" 
+              value={newUser.bio} 
+              onChange={e => setNewUser({...newUser, bio: e.target.value})} 
+              className="p-2 border border-stone-300 w-full font-serif italic text-sm min-h-[80px] focus:outline-none focus:border-accent" 
+            />
             <div>
               <label className="text-xs text-stone-500 mb-1 block">Upload Photo (Max 2MB)</label>
               <input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, (base64) => setNewUser({...newUser, photoUrl: base64}))} className="text-sm w-full" />
@@ -258,28 +246,24 @@ const Admin = () => {
           </form>
         </div>
 
-        {/* BOX 3: CLASS CHAOS (GAMES) */}
+        {/* NEW BOX: MANAGE CLASS CHAOS */}
         <div className="paper-cutout p-6 lg:col-span-2">
-          <h2 className="font-serif text-2xl mb-4 text-accent">Class Chaos (Games/Questions)</h2>
-          
-          <form onSubmit={handleAddQuestion} className="mb-6 flex flex-col md:flex-row gap-3 bg-stone-50 p-4 border border-stone-200">
-            <input type="text" placeholder="Question" value={newQuestion.text} onChange={e => setNewQuestion({...newQuestion, text: e.target.value})} className="p-2 border border-stone-300 flex-1" />
-            <input type="text" placeholder="Options (comma separated)" value={newQuestion.options} onChange={e => setNewQuestion({...newQuestion, options: e.target.value})} className="p-2 border border-stone-300 flex-1" />
-            <input type="text" placeholder="Correct Answer" value={newQuestion.correctAnswer} onChange={e => setNewQuestion({...newQuestion, correctAnswer: e.target.value})} className="p-2 border border-stone-300 flex-1" />
-            <button type="submit" className="bg-ink text-paper py-2 px-6 hover:bg-stone-700 transition">Save</button>
-          </form>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {questions.map(q => (
-              <div key={q.id} className="p-4 border border-stone-200 bg-white relative">
-                <button onClick={() => handleDeleteQuestion(q.id)} className="absolute top-2 right-2 text-red-300 hover:text-red-500 text-xs font-bold">X</button>
-                <div className="font-serif pr-4 mb-2">{q.text}</div>
-                <div className="text-xs text-stone-500 mb-1">Options: {Array.isArray(q.options) ? q.options.join(', ') : q.options}</div>
-                <div className="text-xs font-bold text-green-600">Answer: {q.correctAnswer}</div>
-              </div>
-            ))}
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="flex-1">
+              <h2 className="font-serif text-2xl mb-2 text-accent italic">Manage Class Chaos</h2>
+              <p className="text-stone-500 text-sm leading-relaxed max-w-2xl">
+                The synchronized gaming hub. Create image guesses, timeline puzzles, and nickname challenges. Control the timer, monitor the live leaderboard, and lead the Class of 2026 into mayhem.
+              </p>
+            </div>
+            <button 
+              onClick={() => window.location.href = '/admin/class-chaos'} 
+              className="bg-ink text-paper py-4 px-8 rounded-sm font-bold hover:bg-stone-700 transition shadow-xl whitespace-nowrap"
+            >
+              🎮 Manage Game &rarr;
+            </button>
           </div>
         </div>
+
 
         {/* BOX 4: TIME CAPSULE */}
         <div className="paper-cutout p-6 lg:col-span-2">
