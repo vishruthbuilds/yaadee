@@ -19,7 +19,11 @@ const LiveReactions = () => {
     channel
       .on('broadcast', { event: 'emoji-reaction' }, (payload) => {
         const id = Date.now() + Math.random();
-        setActiveReactions((prev) => [...prev, { ...payload.payload, id }]);
+        setActiveReactions((prev) => {
+          const next = [...prev, { ...payload.payload, id }];
+          if (next.length > 20) return next.slice(-20); // Keep only last 20
+          return next;
+        });
         
         setTimeout(() => {
           setActiveReactions((prev) => prev.filter(r => r.id !== id));

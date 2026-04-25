@@ -11,7 +11,7 @@ const Welcome = () => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: window.location.origin + '/hub'
+        redirectTo: window.location.origin + '/select-user'
       }
     });
     
@@ -79,7 +79,7 @@ const Welcome = () => {
             onClick={() => navigate('/select-user')}
             className="text-stone-400 font-serif italic text-sm hover:text-warm-brown transition-colors tracking-widest"
           >
-            Or browse the archives as guest &rarr;
+            Or identify yourself from the list &rarr;
           </button>
         </motion.div>
       </motion.div>

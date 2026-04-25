@@ -21,12 +21,13 @@ const MainHub = () => {
         return;
       }
       
-      if (savedUser) {
-        setUser(JSON.parse(savedUser));
-      } else if (session) {
-        // Fallback for Google users who might not have a "person" profile yet
-        setUser({ name: session.user.user_metadata.full_name || session.user.email });
+      if (!savedUser) {
+        // Even if we have a session, we need them to pick their name from the list
+        navigate('/select-user');
+        return;
       }
+      
+      setUser(JSON.parse(savedUser));
     };
     checkAuth();
   }, [navigate]);

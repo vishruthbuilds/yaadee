@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+yaadee-frontend/node_modules/
+yaadee-backend/node_modules/
+
+# Build outputs
+yaadee-frontend/dist/
+dist/
+
+# Environment variables
+.env
+.env.local
+yaadee-frontend/.env
+yaadee-frontend/.env.local
+yaadee-backend/.env
+
+# IDEs
+.vscode/
+.idea/
+
+# Teaser (Explicitly requested to not push)
+teaser/
+
+# OS files
+.DS_Store
+Thumbs.db

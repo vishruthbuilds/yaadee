@@ -59,22 +59,24 @@ const Admin = () => {
     }
   };
 
-  // --- Image Upload to Base64 Helper ---
-  const handleImageUpload = (e, callback) => {
+  const [uploading, setUploading] = useState(false);
+
+  const handleImageUpload = async (e, callback) => {
     const file = e.target.files[0];
     if (!file) return;
     
-    // Check size (prevent extremely large files from crashing Supabase)
-    if (file.size > 2 * 1024 * 1024) {
-      alert('Please select an image smaller than 2MB');
-      return;
+    setUploading(true);
+    try {
+      const { compressImage, uploadFile } = await import('../api');
+      const compressed = await compressImage(file);
+      const url = await uploadFile(compressed);
+      callback(url);
+    } catch (err) {
+      console.error('Admin upload failed:', err);
+      alert('Photo upload failed. Please try again.');
+    } finally {
+      setUploading(false);
     }
-
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      callback(reader.result); // This is the Base64 string
-    };
-    reader.readAsDataURL(file);
   };
 
   // --- Users ---
@@ -223,7 +225,13 @@ const Admin = () => {
                 <img src={newUser.photoUrl} alt="preview" className="w-16 h-16 object-cover rounded-sm border border-stone-300" />
               </div>
             )}
-            <button type="submit" className="bg-ink text-paper py-2 px-4 mt-2 hover:bg-stone-700 transition">Save Person</button>
+            <button 
+              type="submit" 
+              disabled={uploading}
+              className={`bg-ink text-paper py-2 px-4 mt-2 hover:bg-stone-700 transition ${uploading ? 'opacity-50 cursor-not-allowed' : ''}`}
+            >
+              {uploading ? 'Uploading Photo...' : 'Save Person'}
+            </button>
           </form>
         </div>
 

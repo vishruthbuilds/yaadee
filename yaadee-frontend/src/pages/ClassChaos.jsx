@@ -30,9 +30,14 @@ const ClassChaos = () => {
       })
       .subscribe();
 
+    let lastFetch = 0;
     const playerSub = supabase.channel('chaos_players_user')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'chaos_players' }, () => {
-        loadPlayers();
+        const now = Date.now();
+        if (now - lastFetch > 3000) { // Only fetch at most every 3 seconds
+          loadPlayers();
+          lastFetch = now;
+        }
       })
       .subscribe();
 
@@ -62,16 +67,11 @@ const ClassChaos = () => {
   const [myUser, setMyUser] = useState(user);
 
   useEffect(() => {
-    const checkUser = async () => {
-      const { data: { user: sbUser } } = await supabase.auth.getUser();
-      if (sbUser) {
-        setMyUser({ 
-          name: sbUser.user_metadata.full_name || sbUser.email, 
-          id: sbUser.id 
-        });
-      }
-    };
-    checkUser();
+    // We rely on yaadee_user from localStorage which is enforced in MainHub
+    const savedUser = localStorage.getItem('yaadee_user');
+    if (savedUser) {
+      setMyUser(JSON.parse(savedUser));
+    }
   }, []);
 
   useEffect(() => {

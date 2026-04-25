@@ -17,21 +17,42 @@ const AdminTimeCapsule = () => {
     load();
   }, []);
 
-  const handleUpload = (e, type) => {
+  const handleUpload = async (e, type) => {
     const files = Array.from(e.target.files);
-    files.forEach(file => {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        if (type === 'book') {
-          setData(prev => ({ ...prev, book_images: [...prev.book_images, reader.result] }));
-        } else if (type === 'reel') {
-          setData(prev => ({ ...prev, reel_images: [...prev.reel_images, reader.result] }));
-        } else if (type === 'video') {
-          setData(prev => ({ ...prev, final_video: reader.result }));
+    if (files.length === 0) return;
+
+    setSaving(true); // Show a global loading state during upload
+    
+    try {
+      // Import the new utilities (Assuming they are exported from ../api)
+      const { compressImage, uploadFile } = await import('../api');
+
+      for (const file of files) {
+        let finalUrl = '';
+        
+        if (file.type.startsWith('image/')) {
+          // Compress image before upload
+          const compressed = await compressImage(file);
+          finalUrl = await uploadFile(compressed);
+        } else {
+          // Direct upload for non-images (videos)
+          finalUrl = await uploadFile(file);
         }
-      };
-      reader.readAsDataURL(file);
-    });
+
+        if (type === 'book') {
+          setData(prev => ({ ...prev, book_images: [...prev.book_images, finalUrl] }));
+        } else if (type === 'reel') {
+          setData(prev => ({ ...prev, reel_images: [...prev.reel_images, finalUrl] }));
+        } else if (type === 'video') {
+          setData(prev => ({ ...prev, final_video: finalUrl }));
+        }
+      }
+    } catch (err) {
+      console.error('Upload failed:', err);
+      alert('Upload failed. Please check if the "yaadee" bucket exists in Supabase Storage.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const removeItem = (index, type) => {

@@ -20,18 +20,22 @@ const AdminUsers = () => {
     setLoading(false);
   };
 
-  const handleImageUpload = (e, callback) => {
+  const handleImageUpload = async (e, callback) => {
     const file = e.target.files[0];
     if (!file) return;
-    if (file.size > 2 * 1024 * 1024) {
-      alert('Please select an image smaller than 2MB');
-      return;
+
+    setLoading(true); // Re-use loading state for upload
+    try {
+      const { compressImage, uploadFile } = await import('../api');
+      const compressed = await compressImage(file);
+      const url = await uploadFile(compressed);
+      callback(url);
+    } catch (err) {
+      console.error('Profile upload failed:', err);
+      alert('Photo upload failed. Please try again.');
+    } finally {
+      setLoading(false);
     }
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      callback(reader.result);
-    };
-    reader.readAsDataURL(file);
   };
 
   const handleStartEditUser = (u) => {

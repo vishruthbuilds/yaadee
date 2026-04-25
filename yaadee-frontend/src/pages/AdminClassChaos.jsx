@@ -35,9 +35,14 @@ const AdminClassChaos = () => {
       })
       .subscribe();
 
+    let lastFetch = 0;
     const playerSub = supabase.channel('chaos_players_admin')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'chaos_players' }, () => {
-        loadPlayers();
+        const now = Date.now();
+        if (now - lastFetch > 3000) { // Limit refresh rate to every 3 seconds
+          loadPlayers();
+          lastFetch = now;
+        }
       })
       .subscribe();
 
@@ -63,12 +68,22 @@ const AdminClassChaos = () => {
     setPlayers(p.data || []);
   };
 
-  const handleImageUpload = (e, callback) => {
+  const handleImageUpload = async (e, callback) => {
     const file = e.target.files[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onloadend = () => callback(reader.result);
-    reader.readAsDataURL(file);
+
+    setLoading(true);
+    try {
+      const { compressImage, uploadFile } = await import('../api');
+      const compressed = await compressImage(file);
+      const url = await uploadFile(compressed);
+      callback(url);
+    } catch (err) {
+      console.error('Question image upload failed:', err);
+      alert('Upload failed. Ensure "yaadee" bucket exists in Supabase Storage.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleAddQuestion = async (e) => {
