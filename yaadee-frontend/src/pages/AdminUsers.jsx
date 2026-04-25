@@ -32,7 +32,7 @@ const AdminUsers = () => {
       callback(url);
     } catch (err) {
       console.error('Profile upload failed:', err);
-      alert('Photo upload failed. Please try again.');
+      alert(`Photo upload failed: ${err.message}`);
     } finally {
       setLoading(false);
     }

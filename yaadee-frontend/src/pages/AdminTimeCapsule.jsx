@@ -49,7 +49,7 @@ const AdminTimeCapsule = () => {
       }
     } catch (err) {
       console.error('Upload failed:', err);
-      alert('Upload failed. Please check if the "yaadee" bucket exists in Supabase Storage.');
+      alert(`Upload failed: ${err.message}\n\nCommon fixes:\n1. Ensure bucket "yaadee" exists in Supabase Storage.\n2. Ensure the bucket is set to "Public".\n3. Ensure Storage Policies are set to allow uploads.`);
     } finally {
       setSaving(false);
     }

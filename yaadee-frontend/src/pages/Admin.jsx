@@ -73,7 +73,7 @@ const Admin = () => {
       callback(url);
     } catch (err) {
       console.error('Admin upload failed:', err);
-      alert('Photo upload failed. Please try again.');
+      alert(`Photo upload failed: ${err.message}`);
     } finally {
       setUploading(false);
     }

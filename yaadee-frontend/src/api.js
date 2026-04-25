@@ -60,10 +60,11 @@ export const uploadFile = async (file, bucket = 'yaadee') => {
     });
 
   if (error) {
-    console.error('Error uploading to storage:', error);
-    // If bucket doesn't exist, this might fail. 
-    // In a real app, you'd ensure the bucket exists or handle the specific error.
-    throw error;
+    console.error('Detailed Upload Error:', error);
+    // Provide a more descriptive error for the UI
+    const customError = new Error(error.message || 'Unknown Storage Error');
+    customError.details = error;
+    throw customError;
   }
 
   const { data: { publicUrl } } = supabase.storage
