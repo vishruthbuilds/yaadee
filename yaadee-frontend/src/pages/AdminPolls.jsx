@@ -221,7 +221,7 @@ const AdminPolls = () => {
                              onClick={() => handleResetPoll(poll.id)} 
                              className="text-[10px] font-bold uppercase tracking-widest text-blue-500 hover:text-blue-700 transition p-2 bg-blue-50 rounded group-hover:bg-blue-100"
                            >
-                             Re-run Poll
+                             Run Poll
                            </button>
                            <button 
                              onClick={() => handleDeletePoll(poll.id)} 
