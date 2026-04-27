@@ -244,7 +244,7 @@ const AdminClassChaos = () => {
 
                 <div className="flex gap-4">
                   <button type="submit" className="btn-primary flex-1 py-4 text-lg">
-                    {editingId ? 'Update Question ✓' : 'Save Question &rarr;'}
+                    {editingId ? 'Update Question ✓' : 'Save Question'}
                   </button>
                   {editingId && (
                     <button 
