@@ -436,14 +436,18 @@ export const updateChaosGameState = async (updates) => {
 };
 
 export const joinChaosGame = async (playerName) => {
-  // Check if player already exists to avoid duplicates
-  const { data: existing } = await supabase.from('chaos_players').select('*').eq('name', playerName);
+  const trimmedName = playerName.trim();
+  // Check if player already exists to avoid duplicates (case-insensitive)
+  const { data: existing } = await supabase.from('chaos_players')
+    .select('*')
+    .ilike('name', trimmedName);
+    
   if (existing && existing.length > 0) {
     return { data: existing, error: null };
   }
 
   const { data, error } = await supabase.from('chaos_players').insert([
-    { id: crypto.randomUUID(), name: playerName, score: 0 }
+    { id: crypto.randomUUID(), name: trimmedName, score: 0 }
   ]).select();
   return { data, error };
 };

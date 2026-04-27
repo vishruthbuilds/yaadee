@@ -137,6 +137,29 @@ const ClassChaos = () => {
     }
   }, [gameState?.status]);
 
+  const getDisplayLeaders = () => {
+    if (!gameState || gameState.status === 'lobby') {
+      // Lobby: All users from directory, sorted alphabetically
+      return users.map(u => ({ id: u.id, name: u.name, score: 0 }))
+                 .sort((a, b) => a.name.localeCompare(b.name));
+    }
+    // Active Game: Top 3 active players, no duplicates
+    const uniquePlayers = [];
+    const seenNames = new Set();
+    [...players]
+      .sort((a, b) => b.score - a.score)
+      .forEach(p => {
+        const nameKey = p.name.toLowerCase().trim();
+        if (!seenNames.has(nameKey)) {
+          uniquePlayers.push(p);
+          seenNames.add(nameKey);
+        }
+      });
+    return uniquePlayers.slice(0, 3);
+  };
+
+  const displayLeaders = getDisplayLeaders();
+
   if (loading) return <div className="min-h-screen bg-paper flex items-center justify-center font-serif italic text-stone-400">Loading the mayhem...</div>;
 
   // REVEALED VIEW (COUNTDOWN & CELEBRATION)
@@ -274,11 +297,24 @@ const ClassChaos = () => {
   if (gameState?.status === 'lobby') {
     return (
       <div className="min-h-screen bg-paper flex flex-col items-center justify-center p-6 text-center">
-        <motion.div initial={{ y: 20 }} animate={{ y: 0 }}>
+        <motion.div initial={{ y: 20 }} animate={{ y: 0 }} className="w-full max-w-2xl">
            <h1 className="text-6xl font-serif italic text-ink mb-2">Class Chaos</h1>
-           <p className="text-stone-500 font-serif italic mb-12 uppercase tracking-widest text-[10px]">Prepare for the Mayhem</p>
-           <div className="w-16 h-1 bg-accent mx-auto mb-12"></div>
-           <p className="text-stone-400 font-serif italic">Waiting for the Game Master to begin...</p>
+           <p className="text-stone-500 font-serif italic mb-8 uppercase tracking-widest text-[10px]">Prepare for the Mayhem</p>
+           <div className="w-16 h-1 bg-accent mx-auto mb-8"></div>
+           
+           <div className="bg-white/50 border border-stone-200 p-6 rounded-sm mb-8">
+             <h3 className="text-xs font-bold uppercase tracking-[0.3em] text-stone-400 mb-6">Participants Directory</h3>
+             <div className="grid grid-cols-2 md:grid-cols-3 gap-4 max-h-[40vh] overflow-y-auto pr-2 custom-scrollbar">
+               {displayLeaders.map(p => (
+                 <div key={p.id} className="flex justify-between items-center bg-white p-3 border border-stone-100 shadow-sm text-left">
+                   <span className="text-xs font-serif italic text-ink truncate mr-2">{p.name}</span>
+                   <span className="text-[10px] font-mono font-bold text-stone-300">{p.score}</span>
+                 </div>
+               ))}
+             </div>
+           </div>
+
+           <p className="text-stone-400 font-serif italic animate-pulse">Waiting for the Game Master to begin...</p>
         </motion.div>
       </div>
     );
@@ -328,8 +364,8 @@ const ClassChaos = () => {
         <div className="flex flex-col items-end">
            <span className="text-[10px] uppercase tracking-[0.4em] font-bold text-stone-400">Leaders</span>
            <div className="flex gap-2 mt-1">
-              {players.slice(0, 3).map((p, i) => (
-                <div key={p.id} className="flex items-center gap-1">
+              {displayLeaders.map((p, i) => (
+                <div key={p.id || i} className="flex items-center gap-1">
                    <span className="text-[10px] font-mono text-stone-400">#{i+1}</span>
                    <span className="text-xs font-serif italic text-ink">{p.name.split(' ')[0]}</span>
                    <span className="text-xs font-mono font-bold text-accent">{p.score}</span>
