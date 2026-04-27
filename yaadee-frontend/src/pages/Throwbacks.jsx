@@ -129,7 +129,7 @@ const Throwbacks = () => {
           {isRevealed && (
             <motion.div 
               layout
-              className="w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 md:gap-12"
+              className="w-full grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-12"
             >
               {cards.map((card, index) => (
                 <Card 
