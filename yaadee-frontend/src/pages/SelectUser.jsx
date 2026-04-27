@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { fetchUsers, saveUserIdentity } from '../api';
+import { fetchUsers, saveUserIdentity, fetchUserIdentity } from '../api';
 import { supabase } from '../supabaseClient';
 import PageWrapper from '../components/PageWrapper';
 
@@ -14,13 +14,26 @@ const SelectUser = () => {
   const [showDropdown, setShowDropdown] = useState(false);
 
   useEffect(() => {
-    const loadUsers = async () => {
+    const init = async () => {
+      // 1. Check if this Google account already has a mapped identity
+      const { data: { user: googleUser } } = await supabase.auth.getUser();
+      if (googleUser?.email) {
+        const mappedUser = await fetchUserIdentity(googleUser.email);
+        if (mappedUser) {
+          // Already mapped — skip selection, go straight to hub
+          localStorage.setItem('yaadee_user', JSON.stringify(mappedUser));
+          navigate('/hub', { replace: true });
+          return;
+        }
+      }
+
+      // 2. New user — load the directory for them to pick from
       const data = await fetchUsers();
       if (data) setUsers(data);
       setLoading(false);
     };
-    loadUsers();
-  }, []);
+    init();
+  }, [navigate]);
 
   const filteredUsers = users.filter(user => 
     user.name && user.name.toLowerCase().includes(search.toLowerCase())
