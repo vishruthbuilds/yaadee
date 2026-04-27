@@ -267,20 +267,24 @@ const ClassChaos = () => {
                return (
                  <motion.div 
                    key={winner.name}
+                   drag
+                   dragConstraints={{ left: -50, right: 50, top: -50, bottom: 50 }}
+                   whileHover={{ scale: 1.05 }}
+                   whileTap={{ scale: 0.95 }}
                    initial={{ scale: 0.8, opacity: 0 }}
                    animate={{ scale: 1, opacity: 1 }}
                    transition={{ delay: idx * 0.2 }}
-                   className="flex flex-col items-center"
+                   className="flex flex-col items-center cursor-grab active:cursor-grabbing z-20"
                  >
                    <div className="relative mb-6">
                      <motion.div 
                        animate={{ rotate: [idx % 2 === 0 ? 3 : -3, idx % 2 === 0 ? -3 : 3, idx % 2 === 0 ? 3 : -3] }} 
                        transition={{ repeat: Infinity, duration: 3 }}
-                       className="w-44 h-44 md:w-56 md:h-56 rounded-sm border-8 border-white shadow-2xl overflow-hidden"
+                       className="w-44 h-44 md:w-56 md:h-56 rounded-sm border-8 border-white shadow-2xl bg-stone-100 flex items-center justify-center"
                      >
-                       <img src={profile?.photoUrl || 'https://via.placeholder.com/300'} className="w-full h-full object-cover" alt="" />
+                       <img src={profile?.photoUrl || 'https://via.placeholder.com/300'} className="w-full h-full object-contain bg-white" alt="" />
                      </motion.div>
-                     <div className="absolute -top-8 -right-8 text-7xl drop-shadow-lg">👑</div>
+                     <div className="absolute -top-8 -right-8 text-7xl drop-shadow-lg pointer-events-none">👑</div>
                      <div className="absolute -bottom-5 left-1/2 -translate-x-1/2 bg-accent text-white px-6 py-2 text-sm font-mono font-bold rounded-full whitespace-nowrap shadow-xl">
                        {winner.score} POINTS
                      </div>
@@ -301,18 +305,27 @@ const ClassChaos = () => {
                    return (
                      <motion.div 
                        key={runner.name}
+                       drag
+                       dragConstraints={{ left: -30, right: 30, top: -30, bottom: 30 }}
+                       whileHover={{ scale: 1.05 }}
+                       whileTap={{ scale: 0.95 }}
                        initial={{ y: 20, opacity: 0 }}
                        animate={{ y: 0, opacity: 1 }}
                        transition={{ delay: 0.5 + idx * 0.1 }}
-                       className="flex items-center gap-5 bg-white/60 p-4 rounded-lg border border-stone-100 shadow-sm"
+                       className="flex flex-col items-center cursor-grab active:cursor-grabbing z-10"
                      >
-                       <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-white shadow-md">
-                         <img src={profile?.photoUrl || 'https://via.placeholder.com/150'} className="w-full h-full object-cover" alt="" />
+                       <div className="relative mb-4">
+                         <motion.div 
+                           className="w-32 h-32 md:w-40 md:h-40 rounded-sm border-4 border-white shadow-xl bg-stone-100 flex items-center justify-center"
+                         >
+                           <img src={profile?.photoUrl || 'https://via.placeholder.com/150'} className="w-full h-full object-contain bg-white" alt="" />
+                         </motion.div>
+                         <div className="absolute -top-5 -right-5 text-5xl drop-shadow-md pointer-events-none">🥈</div>
+                         <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 bg-stone-700 text-white px-4 py-1 text-xs font-mono font-bold rounded-full whitespace-nowrap shadow-md">
+                           {runner.score} POINTS
+                         </div>
                        </div>
-                       <div className="text-left">
-                         <p className="text-lg font-serif italic text-ink">{runner.name}</p>
-                         <p className="text-xs font-mono text-accent font-bold">{runner.score} PTS</p>
-                       </div>
+                       <h2 className="text-xl md:text-2xl font-serif italic text-ink mt-2 text-center">{runner.name}</h2>
                      </motion.div>
                    );
                  })}
@@ -440,8 +453,8 @@ const ClassChaos = () => {
               {currentQuestion.type === 'image_guess' && (
                 <div className="space-y-8 flex flex-col items-center">
                   <h2 className="text-2xl md:text-3xl font-serif italic text-center">Identify the person</h2>
-                  <div className="w-full max-h-[60vh] rounded-sm overflow-hidden shadow-2xl border-8 border-white flex items-center justify-center bg-white">
-                    <img src={currentQuestion.data.image} className="max-w-full max-h-full object-contain" alt="Memory" />
+                  <div className="w-full rounded-sm shadow-2xl border-8 border-white flex items-center justify-center bg-white p-2">
+                    <img src={currentQuestion.data.image} className="w-auto h-auto max-w-full max-h-[55vh] object-contain" alt="Memory" />
                   </div>
                   {!myUser?.isDemo ? (
                     <StudentSelector 
@@ -501,8 +514,10 @@ const ClassChaos = () => {
                             value={idx}
                             className="p-3 bg-white border border-stone-200 rounded-sm shadow-sm cursor-grab active:cursor-grabbing flex items-center gap-4 group"
                           >
-                            <div className="w-12 h-12 bg-stone-100 flex items-center justify-center font-mono text-stone-300">#</div>
-                            <img src={currentQuestion.data.images[idx]} className="w-24 h-16 object-cover rounded shadow-sm" alt="" />
+                            <div className="w-12 h-12 bg-stone-100 flex items-center justify-center font-mono text-stone-300 shrink-0">#</div>
+                            <div className="w-24 h-16 md:w-32 md:h-20 bg-stone-50 rounded flex items-center justify-center overflow-hidden shrink-0">
+                              <img src={currentQuestion.data.images[idx]} className="w-full h-full object-contain" alt="" />
+                            </div>
                             <span className="font-serif italic text-stone-400 group-hover:text-ink">Drag to position</span>
                           </Reorder.Item>
                         ))}
@@ -520,8 +535,10 @@ const ClassChaos = () => {
                       <div className="w-full grid grid-cols-1 gap-4">
                         {timelineOrder.map((idx) => (
                           <div key={idx} className="p-3 bg-white border border-stone-200 rounded-sm shadow-sm flex items-center gap-4">
-                            <div className="w-12 h-12 bg-stone-100 flex items-center justify-center font-mono text-stone-300">?</div>
-                            <img src={currentQuestion.data.images[idx]} className="w-24 h-16 object-cover rounded shadow-sm" alt="" />
+                            <div className="w-12 h-12 bg-stone-100 flex items-center justify-center font-mono text-stone-300 shrink-0">?</div>
+                            <div className="w-24 h-16 md:w-32 md:h-20 bg-stone-50 rounded flex items-center justify-center overflow-hidden shrink-0">
+                              <img src={currentQuestion.data.images[idx]} className="w-full h-full object-contain" alt="" />
+                            </div>
                             <span className="font-serif italic text-stone-400">Class is answering...</span>
                           </div>
                         ))}

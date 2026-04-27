@@ -13,11 +13,17 @@ const MainHub = () => {
       const { data: { session } } = await supabase.auth.getSession();
       
       // Check if we have a local guest session (Select User flow)
-      const savedUser = localStorage.getItem('yaadee_user');
+      const savedUserStr = localStorage.getItem('yaadee_user');
+      const savedUser = savedUserStr ? JSON.parse(savedUserStr) : null;
       
       if (!session && !savedUser) {
         // No session and no local user? Go to welcome
         navigate('/');
+        return;
+      }
+
+      if (savedUser?.isDemo) {
+        setUser(savedUser);
         return;
       }
       
@@ -44,7 +50,7 @@ const MainHub = () => {
         return;
       }
       
-      setUser(JSON.parse(savedUser));
+      setUser(savedUser);
     };
     checkAuth();
   }, [navigate]);
