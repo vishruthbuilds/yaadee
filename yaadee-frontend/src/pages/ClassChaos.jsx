@@ -181,6 +181,7 @@ const ClassChaos = () => {
     // Active Game: Aggregate scores by name and return top 3
     const aggregated = players.reduce((acc, p) => {
       const key = p.name.toLowerCase().trim();
+      if (key === 'demo user') return acc;
       if (!acc[key]) {
         acc[key] = { ...p, score: 0 };
       }
@@ -216,10 +217,10 @@ const ClassChaos = () => {
        );
      }
 
-     // Calculate winners and runners including ties
      // Calculate winners and runners including ties with aggregated scores
      const aggregatedResults = players.reduce((acc, p) => {
        const key = p.name.toLowerCase().trim();
+       if (key === 'demo user') return acc;
        if (!acc[key]) {
          acc[key] = { ...p, score: 0 };
        }
