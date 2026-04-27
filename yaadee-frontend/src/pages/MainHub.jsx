@@ -21,18 +21,25 @@ const MainHub = () => {
         return;
       }
       
-      if (!savedUser) {
-        // If we have a session but no local user, try to restore from database mapping
-        if (session?.user?.email) {
-          const { fetchUserIdentity } = await import('../api');
-          const mappedUser = await fetchUserIdentity(session.user.email);
-          if (mappedUser) {
-            localStorage.setItem('yaadee_user', JSON.stringify(mappedUser));
-            setUser(mappedUser);
-            return;
-          }
+      if (session?.user?.email) {
+        // Always verify against DB if logged in with Google
+        const { fetchUserIdentity } = await import('../api');
+        const mappedUser = await fetchUserIdentity(session.user.email);
+        if (!mappedUser) {
+          // Mapping was deleted by Admin or never existed
+          localStorage.removeItem('yaadee_user');
+          navigate('/select-user');
+          return;
+        } else {
+          // Keep local storage synced
+          localStorage.setItem('yaadee_user', JSON.stringify(mappedUser));
+          setUser(mappedUser);
+          return;
         }
-        // If no mapping found, then they must pick their name
+      }
+
+      if (!savedUser) {
+        // Fallback for non-Google users if we ever allow that
         navigate('/select-user');
         return;
       }
