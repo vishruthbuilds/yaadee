@@ -531,6 +531,16 @@ export const saveUserIdentity = async (email, directoryUserId) => {
   return { data, error };
 };
 
+export const deleteUserIdentity = async (email) => {
+  if (!email) return null;
+  const { data, error } = await supabase.from('user_identities')
+    .delete()
+    .eq('email', email)
+    .select();
+  if (error) console.error('Error deleting user identity:', error);
+  return { data, error };
+};
+
 export const fetchUserIdentity = async (email) => {
   if (!email) return null;
   // Get the mapping
