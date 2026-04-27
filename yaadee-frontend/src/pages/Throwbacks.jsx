@@ -188,7 +188,7 @@ const Card = ({ card, index, isRevealed, isFlipped, onFlip }) => {
       >
         {/* FRONT: Polaroid Style */}
         <div className="absolute inset-0 backface-hidden bg-white p-4 pb-12 shadow-md border border-stone-100 rounded-sm hover:shadow-xl transition-shadow flex flex-col">
-          <div className="flex-1 bg-stone-100 mb-4 overflow-hidden relative grayscale group-hover:grayscale-0 transition-all duration-1000 flex items-center justify-center">
+          <div className="flex-1 bg-stone-100 mb-4 overflow-hidden relative transition-all duration-1000 flex items-center justify-center">
              {card.photoUrl ? (
                <img src={card.photoUrl} className="w-full h-full object-cover" alt="" />
              ) : (

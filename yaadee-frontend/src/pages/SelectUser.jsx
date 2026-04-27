@@ -105,7 +105,7 @@ const SelectUser = () => {
               <div className="tape-mark -top-3 left-1/2 -translate-x-1/2 rotate-[5deg] w-16"></div>
               <div className="aspect-square w-56 bg-stone-100 mb-6 overflow-hidden rounded-sm flex items-center justify-center relative shadow-inner">
                 {selectedUser.photoUrl ? (
-                  <img src={selectedUser.photoUrl} alt={selectedUser.name} className="object-cover w-full h-full grayscale hover:grayscale-0 transition-all duration-700" />
+                  <img src={selectedUser.photoUrl} alt={selectedUser.name} className="object-cover w-full h-full transition-all duration-700" />
                 ) : (
                   <div className="text-7xl text-stone-300 font-serif">{selectedUser.name.charAt(0)}</div>
                 )}

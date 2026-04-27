@@ -2,6 +2,7 @@ const { readData, writeData } = require('../utils/fileOps');
 
 const getUsers = (req, res) => {
     const users = readData('users.json', []);
+    users.sort((a, b) => a.name.localeCompare(b.name));
     res.json(users);
 };
 

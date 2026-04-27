@@ -222,7 +222,7 @@ const TimeCapsule = () => {
             className="h-screen bg-black flex items-center justify-center"
           >
             {finalVideo ? (
-              <video src={finalVideo} autoPlay loop className="w-full h-full object-cover opacity-80" />
+              <video src={finalVideo} autoPlay loop className="landscape-video opacity-80" />
             ) : (
               <div className="text-center p-8 text-stone-700 font-serif italic text-2xl">Finishing the reel...</div>
             )}
