@@ -89,6 +89,9 @@ export const fetchUsers = async () => {
     console.error('Error fetching users:', error);
     return null;
   }
+  if (data) {
+    return data.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+  }
   return data;
 };
 
@@ -360,6 +363,9 @@ export const updateTimeCapsule = async (updates) => {
 export const fetchThrowbacks = async () => {
   const { data, error } = await supabase.from('throwbacks').select('*');
   if (error) console.error('Error fetching throwbacks:', error);
+  if (data) {
+    return data.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+  }
   return data || [];
 };
 
