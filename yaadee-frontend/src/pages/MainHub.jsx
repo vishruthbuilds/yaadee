@@ -22,7 +22,17 @@ const MainHub = () => {
       }
       
       if (!savedUser) {
-        // Even if we have a session, we need them to pick their name from the list
+        // If we have a session but no local user, try to restore from database mapping
+        if (session?.user?.email) {
+          const { fetchUserIdentity } = await import('../api');
+          const mappedUser = await fetchUserIdentity(session.user.email);
+          if (mappedUser) {
+            localStorage.setItem('yaadee_user', JSON.stringify(mappedUser));
+            setUser(mappedUser);
+            return;
+          }
+        }
+        // If no mapping found, then they must pick their name
         navigate('/select-user');
         return;
       }
