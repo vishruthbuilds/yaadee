@@ -109,13 +109,12 @@
 
 @media (orientation: portrait) {
   .landscape-video {
-    width: 100vh !important;
-    height: 100vw !important;
-    object-fit: contain;
+    width: 100dvh !important;
+    height: 100dvw !important;
+    object-fit: cover;
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%) rotate(90deg);
-    background: black;
   }
 }

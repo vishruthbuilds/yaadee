@@ -219,7 +219,7 @@ const TimeCapsule = () => {
             key="video"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="h-screen bg-black flex items-center justify-center"
+            className="h-screen w-full bg-black flex items-center justify-center overflow-hidden"
           >
             {finalVideo ? (
               <video src={finalVideo} autoPlay loop className="landscape-video opacity-80" />
