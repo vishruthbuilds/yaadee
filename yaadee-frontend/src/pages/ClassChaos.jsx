@@ -21,6 +21,7 @@ const ClassChaos = () => {
   const [hasAnswered, setHasAnswered] = useState(false);
   const [localIndex, setLocalIndex] = useState(0);
   const [pointsEarned, setPointsEarned] = useState(null); // feedback after answering
+  const [demoTimeLeft, setDemoTimeLeft] = useState(30);
 
   useEffect(() => {
     loadInitial();
@@ -100,9 +101,30 @@ const ClassChaos = () => {
       const shuffled = [0, 1, 2, 3].sort(() => Math.random() - 0.5);
       setTimelineOrder(shuffled);
     }
-  }, [localIndex]);
+  }, [localIndex, questions]);
 
   const currentQuestion = questions[localIndex];
+
+  useEffect(() => {
+    if (myUser?.isDemo && currentQuestion && !hasAnswered) {
+      setDemoTimeLeft(30);
+      const timer = setInterval(() => {
+        setDemoTimeLeft(prev => {
+          if (prev <= 1) {
+            clearInterval(timer);
+            if (localIndex < questions.length - 1) {
+              setLocalIndex(l => l + 1);
+            } else {
+              setLocalIndex(questions.length);
+            }
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+      return () => clearInterval(timer);
+    }
+  }, [myUser?.isDemo, localIndex, currentQuestion, questions.length, hasAnswered]);
 
   const handleSubmit = async (directAnswer) => {
     if (hasAnswered || !currentQuestion) return;
@@ -421,13 +443,19 @@ const ClassChaos = () => {
                   <div className="w-full max-h-[60vh] rounded-sm overflow-hidden shadow-2xl border-8 border-white flex items-center justify-center bg-white">
                     <img src={currentQuestion.data.image} className="max-w-full max-h-full object-contain" alt="Memory" />
                   </div>
-                  <StudentSelector 
-                    value={answer} 
-                    onChange={setAnswer} 
-                    users={users} 
-                    onSubmit={handleSubmit}
-                    disabled={hasAnswered}
-                  />
+                  {!myUser?.isDemo ? (
+                    <StudentSelector 
+                      value={answer} 
+                      onChange={setAnswer} 
+                      users={users} 
+                      onSubmit={handleSubmit}
+                      disabled={hasAnswered}
+                    />
+                  ) : (
+                    <div className="text-stone-400 font-serif italic text-xl mt-4">
+                      Projecting for the class... ({demoTimeLeft}s)
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -438,13 +466,19 @@ const ClassChaos = () => {
                   <div className="text-5xl md:text-7xl font-serif italic text-accent">
                     "{currentQuestion.data.nickname}"
                   </div>
-                  <StudentSelector 
-                    value={answer} 
-                    onChange={setAnswer} 
-                    users={users} 
-                    onSubmit={handleSubmit}
-                    disabled={hasAnswered}
-                  />
+                  {!myUser?.isDemo ? (
+                    <StudentSelector 
+                      value={answer} 
+                      onChange={setAnswer} 
+                      users={users} 
+                      onSubmit={handleSubmit}
+                      disabled={hasAnswered}
+                    />
+                  ) : (
+                    <div className="text-stone-400 font-serif italic text-xl mt-4">
+                      Projecting for the class... ({demoTimeLeft}s)
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -452,31 +486,51 @@ const ClassChaos = () => {
               {currentQuestion.type === 'timeline' && (
                 <div className="space-y-8 flex flex-col items-center">
                   <h2 className="text-2xl md:text-3xl font-serif italic text-center">Arrange Chronologically</h2>
-                  <Reorder.Group 
-                    axis="y" 
-                    values={timelineOrder} 
-                    onReorder={setTimelineOrder}
-                    className="w-full grid grid-cols-1 gap-4"
-                  >
-                    {timelineOrder.map((idx) => (
-                      <Reorder.Item 
-                        key={idx} 
-                        value={idx}
-                        className="p-3 bg-white border border-stone-200 rounded-sm shadow-sm cursor-grab active:cursor-grabbing flex items-center gap-4 group"
+                  
+                  {!myUser?.isDemo ? (
+                    <>
+                      <Reorder.Group 
+                        axis="y" 
+                        values={timelineOrder} 
+                        onReorder={setTimelineOrder}
+                        className="w-full grid grid-cols-1 gap-4"
                       >
-                         <div className="w-12 h-12 bg-stone-100 flex items-center justify-center font-mono text-stone-300">#</div>
-                         <img src={currentQuestion.data.images[idx]} className="w-24 h-16 object-cover rounded shadow-sm" alt="" />
-                         <span className="font-serif italic text-stone-400 group-hover:text-ink">Drag to position</span>
-                      </Reorder.Item>
-                    ))}
-                  </Reorder.Group>
-                  <button 
-                    disabled={hasAnswered}
-                    onClick={handleSubmit} 
-                    className="btn-primary w-full py-4 text-xl mt-8 disabled:opacity-50"
-                  >
-                    {hasAnswered ? 'Submitting...' : 'Confirm Order!'}
-                  </button>
+                        {timelineOrder.map((idx) => (
+                          <Reorder.Item 
+                            key={idx} 
+                            value={idx}
+                            className="p-3 bg-white border border-stone-200 rounded-sm shadow-sm cursor-grab active:cursor-grabbing flex items-center gap-4 group"
+                          >
+                            <div className="w-12 h-12 bg-stone-100 flex items-center justify-center font-mono text-stone-300">#</div>
+                            <img src={currentQuestion.data.images[idx]} className="w-24 h-16 object-cover rounded shadow-sm" alt="" />
+                            <span className="font-serif italic text-stone-400 group-hover:text-ink">Drag to position</span>
+                          </Reorder.Item>
+                        ))}
+                      </Reorder.Group>
+                      <button 
+                        disabled={hasAnswered}
+                        onClick={handleSubmit} 
+                        className="btn-primary w-full py-4 text-xl mt-8 disabled:opacity-50"
+                      >
+                        {hasAnswered ? 'Submitting...' : 'Confirm Order!'}
+                      </button>
+                    </>
+                  ) : (
+                    <div className="w-full flex flex-col items-center">
+                      <div className="w-full grid grid-cols-1 gap-4">
+                        {timelineOrder.map((idx) => (
+                          <div key={idx} className="p-3 bg-white border border-stone-200 rounded-sm shadow-sm flex items-center gap-4">
+                            <div className="w-12 h-12 bg-stone-100 flex items-center justify-center font-mono text-stone-300">?</div>
+                            <img src={currentQuestion.data.images[idx]} className="w-24 h-16 object-cover rounded shadow-sm" alt="" />
+                            <span className="font-serif italic text-stone-400">Class is answering...</span>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="text-stone-400 font-serif italic text-xl mt-8">
+                        Projecting for the class... ({demoTimeLeft}s)
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

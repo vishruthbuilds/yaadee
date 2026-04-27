@@ -12,6 +12,8 @@ const SelectUser = () => {
   const [selectedUser, setSelectedUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [demoPassword, setDemoPassword] = useState('');
+  const [demoError, setDemoError] = useState('');
 
   useEffect(() => {
     const init = async () => {
@@ -29,7 +31,9 @@ const SelectUser = () => {
 
       // 2. New user — load the directory for them to pick from
       const data = await fetchUsers();
-      if (data) setUsers(data);
+      if (data) {
+        setUsers([...data, { id: 'demo-user', name: 'Demo User', isDemo: true }]);
+      }
       setLoading(false);
     };
     init();
@@ -45,9 +49,11 @@ const SelectUser = () => {
       localStorage.setItem('yaadee_user', JSON.stringify(selectedUser));
 
       // Try to save to database for persistence across sessions/emails
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user && user.email) {
-        await saveUserIdentity(user.email, selectedUser.id);
+      if (!selectedUser.isDemo) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user && user.email) {
+          await saveUserIdentity(user.email, selectedUser.id);
+        }
       }
 
       navigate('/hub');
@@ -58,6 +64,8 @@ const SelectUser = () => {
     setSelectedUser(user);
     setSearch(user.name);
     setShowDropdown(false);
+    setDemoPassword('');
+    setDemoError('');
   };
 
   return (
@@ -136,12 +144,47 @@ const SelectUser = () => {
               <h3 className="font-serif text-center text-2xl text-ink italic">{selectedUser.name}</h3>
             </div>
 
-            <button 
-              onClick={handleContinue}
-              className="btn-primary shadow-2xl flex items-center gap-3 text-lg px-12 py-5 bg-warm-brown"
-            >
-              Confirm Identity <span className="font-serif italic font-bold text-soft-yellow">{selectedUser.name}</span> &rarr;
-            </button>
+            {selectedUser.isDemo ? (
+              <div className="flex flex-col items-center">
+                <input
+                  type="password"
+                  placeholder="Enter demo password..."
+                  value={demoPassword}
+                  onChange={(e) => {
+                    setDemoPassword(e.target.value);
+                    setDemoError('');
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      if (demoPassword === 'V!sh@Yaadee') handleContinue();
+                      else setDemoError('Incorrect password');
+                    }
+                  }}
+                  className="px-6 py-4 rounded-sm border border-stone-300 bg-white/80 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-soft-yellow shadow-sm font-sans text-lg text-center text-ink w-64"
+                />
+                {demoError && <p className="text-red-500 font-serif italic mt-3">{demoError}</p>}
+                
+                <button 
+                  onClick={() => {
+                    if (demoPassword === 'V!sh@Yaadee') {
+                      handleContinue();
+                    } else {
+                      setDemoError('Incorrect password');
+                    }
+                  }}
+                  className="btn-primary shadow-2xl flex items-center justify-center gap-3 text-lg px-12 py-5 bg-warm-brown mt-6 w-64"
+                >
+                  Access Demo &rarr;
+                </button>
+              </div>
+            ) : (
+              <button 
+                onClick={handleContinue}
+                className="btn-primary shadow-2xl flex items-center gap-3 text-lg px-12 py-5 bg-warm-brown"
+              >
+                Confirm Identity <span className="font-serif italic font-bold text-soft-yellow">{selectedUser.name}</span> &rarr;
+              </button>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
