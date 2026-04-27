@@ -104,12 +104,13 @@ const ClassChaos = () => {
 
   const currentQuestion = questions[localIndex];
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (directAnswer) => {
     if (hasAnswered || !currentQuestion) return;
-    let response = currentQuestion.type === 'timeline' ? timelineOrder : answer;
+    // Use directAnswer if provided to avoid stale state closure
+    let response = currentQuestion.type === 'timeline' ? timelineOrder : (directAnswer || answer);
     const result = await submitChaosResponse(myPlayer.id, currentQuestion.id, response);
     setHasAnswered(true);
-    setPointsEarned(result.points || 0);
+    setPointsEarned(result.points ?? 0);
     setTimeout(() => {
       setPointsEarned(null);
       if (localIndex < questions.length - 1) {
@@ -534,8 +535,8 @@ const StudentSelector = ({ value, onChange, users, onSubmit, disabled }) => {
                   onChange(u.name);
                   setShow(false);
                   setSearch('');
-                  // Auto submit after selection
-                  setTimeout(() => onSubmit(), 100);
+                  // Pass name directly — avoids stale answer state in handleSubmit
+                  onSubmit(u.name);
                 }}
                 className="w-full p-4 text-left hover:bg-accent hover:text-white transition-colors border-b border-stone-50 font-serif italic"
               >
