@@ -364,13 +364,13 @@ const ClassChaos = () => {
         <div className="flex flex-col items-end">
            <span className="text-[10px] uppercase tracking-[0.4em] font-bold text-stone-400">Leaders</span>
            <div className="flex gap-2 mt-1">
-              {displayLeaders.map((p, i) => (
-                <div key={p.id || i} className="flex items-center gap-1">
-                   <span className="text-[10px] font-mono text-stone-400">#{i+1}</span>
-                   <span className="text-xs font-serif italic text-ink">{p.name.split(' ')[0]}</span>
-                   <span className="text-xs font-mono font-bold text-accent">{p.score}</span>
-                </div>
-              ))}
+               {displayLeaders.map((p, i) => (
+                 <div key={p.id || i} className="flex items-center gap-1">
+                    <span className="text-[10px] font-mono text-stone-400">#{i+1}</span>
+                    <span className="text-xs font-serif italic text-ink">{p.name}</span>
+                    <span className="text-xs font-mono font-bold text-accent">{p.score}</span>
+                 </div>
+               ))}
            </div>
         </div>
       </div>
