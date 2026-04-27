@@ -139,9 +139,17 @@ const ClassChaos = () => {
 
   const getDisplayLeaders = () => {
     if (!gameState || gameState.status === 'lobby') {
-      // Lobby: All users from directory, sorted alphabetically
-      return users.map(u => ({ id: u.id, name: u.name, score: 0 }))
-                 .sort((a, b) => a.name.localeCompare(b.name));
+      // Lobby: All unique users from directory, sorted alphabetically
+      const uniqueUsers = [];
+      const seen = new Set();
+      users.forEach(u => {
+        const key = u.name.toLowerCase().trim();
+        if (!seen.has(key)) {
+          uniqueUsers.push({ id: u.id, name: u.name, score: 0 });
+          seen.add(key);
+        }
+      });
+      return uniqueUsers.sort((a, b) => a.name.localeCompare(b.name));
     }
     // Active Game: Top 3 active players, no duplicates
     const uniquePlayers = [];
