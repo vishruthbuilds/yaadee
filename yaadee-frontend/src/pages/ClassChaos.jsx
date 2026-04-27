@@ -155,19 +155,20 @@ const ClassChaos = () => {
       });
       return uniqueUsers.sort((a, b) => a.name.localeCompare(b.name));
     }
-    // Active Game: Top 3 active players, no duplicates
-    const uniquePlayers = [];
-    const seenNames = new Set();
-    [...players]
+    
+    // Active Game: Aggregate scores by name and return top 3
+    const aggregated = players.reduce((acc, p) => {
+      const key = p.name.toLowerCase().trim();
+      if (!acc[key]) {
+        acc[key] = { ...p, score: 0 };
+      }
+      acc[key].score += p.score;
+      return acc;
+    }, {});
+    
+    return Object.values(aggregated)
       .sort((a, b) => b.score - a.score)
-      .forEach(p => {
-        const nameKey = p.name.toLowerCase().trim();
-        if (!seenNames.has(nameKey)) {
-          uniquePlayers.push(p);
-          seenNames.add(nameKey);
-        }
-      });
-    return uniquePlayers.slice(0, 3);
+      .slice(0, 3);
   };
 
   const displayLeaders = getDisplayLeaders();
@@ -194,7 +195,17 @@ const ClassChaos = () => {
      }
 
      // Calculate winners and runners including ties
-     const sortedPlayers = [...players].sort((a, b) => b.score - a.score);
+     // Calculate winners and runners including ties with aggregated scores
+     const aggregatedResults = players.reduce((acc, p) => {
+       const key = p.name.toLowerCase().trim();
+       if (!acc[key]) {
+         acc[key] = { ...p, score: 0 };
+       }
+       acc[key].score += p.score;
+       return acc;
+     }, {});
+     
+     const sortedPlayers = Object.values(aggregatedResults).sort((a, b) => b.score - a.score);
      if (sortedPlayers.length === 0) return <div className="min-h-screen bg-ink flex items-center justify-center font-serif italic text-stone-500">Calculating the Legend...</div>;
 
      const highestScore = sortedPlayers[0].score;
@@ -233,7 +244,7 @@ const ClassChaos = () => {
                const profile = users.find(u => u.name.toLowerCase().trim() === winner.name.toLowerCase().trim());
                return (
                  <motion.div 
-                   key={winner.id}
+                   key={winner.name}
                    initial={{ scale: 0.8, opacity: 0 }}
                    animate={{ scale: 1, opacity: 1 }}
                    transition={{ delay: idx * 0.2 }}
@@ -267,7 +278,7 @@ const ClassChaos = () => {
                    const profile = users.find(u => u.name.toLowerCase().trim() === runner.name.toLowerCase().trim());
                    return (
                      <motion.div 
-                       key={runner.id}
+                       key={runner.name}
                        initial={{ y: 20, opacity: 0 }}
                        animate={{ y: 0, opacity: 1 }}
                        transition={{ delay: 0.5 + idx * 0.1 }}
@@ -373,7 +384,7 @@ const ClassChaos = () => {
            </div>
            {/* My live score */}
            <span className="text-[10px] font-mono text-accent font-bold mt-1">
-             {players.find(p => p.id === myPlayer?.id)?.score ?? 0} pts
+             {players.filter(p => p.name.toLowerCase().trim() === myUser?.name.toLowerCase().trim()).reduce((sum, p) => sum + p.score, 0)} pts
            </span>
         </div>
 
