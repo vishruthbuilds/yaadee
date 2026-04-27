@@ -20,6 +20,7 @@ const ClassChaos = () => {
   const [timelineOrder, setTimelineOrder] = useState([]); // indices
   const [hasAnswered, setHasAnswered] = useState(false);
   const [localIndex, setLocalIndex] = useState(0);
+  const [pointsEarned, setPointsEarned] = useState(null); // feedback after answering
 
   useEffect(() => {
     loadInitial();
@@ -106,15 +107,17 @@ const ClassChaos = () => {
   const handleSubmit = async () => {
     if (hasAnswered || !currentQuestion) return;
     let response = currentQuestion.type === 'timeline' ? timelineOrder : answer;
-    await submitChaosResponse(myPlayer.id, currentQuestion.id, response);
+    const result = await submitChaosResponse(myPlayer.id, currentQuestion.id, response);
     setHasAnswered(true);
+    setPointsEarned(result.points || 0);
     setTimeout(() => {
+      setPointsEarned(null);
       if (localIndex < questions.length - 1) {
         setLocalIndex(prev => prev + 1);
       } else {
         setLocalIndex(questions.length); 
       }
-    }, 1000);
+    }, 1500);
   };
 
   const [countdown, setCountdown] = useState(5);
@@ -226,7 +229,7 @@ const ClassChaos = () => {
            {/* WINNERS SECTION */}
            <div className="flex flex-wrap justify-center gap-12 mb-16">
              {winners.map((winner, idx) => {
-               const profile = users.find(u => u.name === winner.name);
+               const profile = users.find(u => u.name.toLowerCase().trim() === winner.name.toLowerCase().trim());
                return (
                  <motion.div 
                    key={winner.id}
@@ -260,7 +263,7 @@ const ClassChaos = () => {
                <h3 className="text-xl font-serif italic text-stone-400 mb-10 uppercase tracking-[0.3em]">Honorable Runners Up</h3>
                <div className="flex flex-wrap justify-center gap-10">
                  {runners.map((runner, idx) => {
-                   const profile = users.find(u => u.name === runner.name);
+                   const profile = users.find(u => u.name.toLowerCase().trim() === runner.name.toLowerCase().trim());
                    return (
                      <motion.div 
                        key={runner.id}
@@ -367,6 +370,10 @@ const ClassChaos = () => {
            <div className="w-12 h-12 rounded-full border-2 border-ink flex items-center justify-center text-ink">
               <span className="font-mono text-xl font-bold">⚡</span>
            </div>
+           {/* My live score */}
+           <span className="text-[10px] font-mono text-accent font-bold mt-1">
+             {players.find(p => p.id === myPlayer?.id)?.score ?? 0} pts
+           </span>
         </div>
 
         <div className="flex flex-col items-end">
@@ -460,6 +467,28 @@ const ClassChaos = () => {
                   </button>
                 </div>
               )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Points earned popup */}
+      <AnimatePresence>
+        {pointsEarned !== null && (
+          <motion.div
+            initial={{ scale: 0.5, opacity: 0, y: 20 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 1.5, opacity: 0, y: -40 }}
+            className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none"
+          >
+            <div className={`text-center px-12 py-8 rounded-sm shadow-2xl border-4 ${pointsEarned > 0 ? 'bg-white border-accent' : 'bg-white border-stone-300'}`}>
+              <div className="text-6xl mb-2">{pointsEarned > 0 ? '🎯' : '😬'}</div>
+              <div className={`text-5xl font-mono font-bold ${pointsEarned > 0 ? 'text-accent' : 'text-stone-400'}`}>
+                {pointsEarned > 0 ? `+${pointsEarned}` : '0'}
+              </div>
+              <div className="text-xs uppercase tracking-widest font-bold text-stone-400 mt-2">
+                {pointsEarned > 0 ? 'Points Earned!' : 'Better luck next time'}
+              </div>
             </div>
           </motion.div>
         )}
