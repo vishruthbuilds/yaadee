@@ -459,19 +459,26 @@ export const fetchChaosPlayers = async () => {
 
 export const submitChaosResponse = async (playerId, questionId, response) => {
   const { data: question } = await supabase.from('chaos_questions').select('*').eq('id', questionId).single();
-  if (!question) return { error: 'Question not found' };
+  if (!question) return { error: 'Question not found', points: 0 };
 
   let points = 0;
+
   if (question.type === 'timeline') {
-    // response is array of indices [0, 1, 2, 3] in user's order
-    const correctOrder = JSON.parse(question.answer); 
+    // response is array of indices in user's dragged order e.g. [2, 0, 3, 1]
+    // correctOrder is [0,1,2,3] — images uploaded in correct chronological order
+    const correctOrder = JSON.parse(question.answer);
     correctOrder.forEach((val, i) => {
-      if (response[i] === val) points += 5; // 5 pts per correct position
+      // Use Number() to handle any type mismatch between DB and state
+      if (Number(response[i]) === Number(val)) points += 5;
     });
   } else {
-    // image_guess or nickname
-    if (response.toLowerCase().trim() === question.answer.toLowerCase().trim()) {
-      points = 20; // 20 pts for correct guess
+    // image_guess or nickname — case-insensitive, null-safe comparison
+    if (
+      response &&
+      question.answer &&
+      response.toString().toLowerCase().trim() === question.answer.toString().toLowerCase().trim()
+    ) {
+      points = 20;
     }
   }
 
@@ -480,6 +487,7 @@ export const submitChaosResponse = async (playerId, questionId, response) => {
     const newScore = (player?.score || 0) + points;
     await supabase.from('chaos_players').update({ score: newScore }).eq('id', playerId);
   }
+
   return { error: null, points };
 };
 
