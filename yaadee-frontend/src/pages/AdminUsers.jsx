@@ -8,6 +8,7 @@ const AdminUsers = () => {
   const [loading, setLoading] = useState(true);
   const [editingUserId, setEditingUserId] = useState(null);
   const [editUserForm, setEditUserForm] = useState({ name: '', photoUrl: '', bio: '' });
+  const [emailToClear, setEmailToClear] = useState('');
 
   useEffect(() => {
     loadUsers();
@@ -65,6 +66,19 @@ const AdminUsers = () => {
     }
   };
 
+  const handleClearEmail = async (e) => {
+    e.preventDefault();
+    if (!emailToClear) return;
+    const { deleteUserIdentity } = await import('../api');
+    const result = await deleteUserIdentity(emailToClear);
+    if (result.error) {
+      alert('Error clearing email: ' + result.error.message);
+    } else {
+      alert(`Cleared identity mapping for ${emailToClear}`);
+      setEmailToClear('');
+    }
+  };
+
   return (
     <div className="min-h-screen p-4 md:p-8 max-w-4xl mx-auto pt-16 md:pt-24">
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 gap-4">
@@ -72,6 +86,23 @@ const AdminUsers = () => {
         <button onClick={() => navigate('/admin')} className="btn-primary py-2 px-4 text-sm w-full md:w-auto">
           Back to Admin
         </button>
+      </div>
+
+      <div className="paper-cutout p-6 mb-8 bg-stone-50 border-accent/20">
+        <h2 className="font-serif text-xl text-ink mb-2">Fix Mistaken Logins</h2>
+        <p className="text-stone-500 text-sm mb-4">If someone chose the wrong name, enter their Google Email here to erase their choice so they can pick again.</p>
+        <form onSubmit={handleClearEmail} className="flex flex-col sm:flex-row gap-3">
+          <input 
+            type="email" 
+            placeholder="Enter Google Email (e.g. name@gmail.com)" 
+            value={emailToClear} 
+            onChange={e => setEmailToClear(e.target.value)} 
+            className="p-3 border border-stone-300 flex-1 focus:outline-none focus:border-accent" 
+          />
+          <button type="submit" className="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 transition">
+            Erase History
+          </button>
+        </form>
       </div>
 
       <div className="paper-cutout p-6">
