@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { fetchUsers } from '../api';
+import { fetchUsers, saveUserIdentity } from '../api';
+import { supabase } from '../supabaseClient';
 import PageWrapper from '../components/PageWrapper';
 
 const SelectUser = () => {
@@ -25,9 +26,17 @@ const SelectUser = () => {
     user.name && user.name.toLowerCase().includes(search.toLowerCase())
   );
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     if (selectedUser) {
+      // Save locally for immediate use
       localStorage.setItem('yaadee_user', JSON.stringify(selectedUser));
+
+      // Try to save to database for persistence across sessions/emails
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user && user.email) {
+        await saveUserIdentity(user.email, selectedUser.id);
+      }
+
       navigate('/hub');
     }
   };

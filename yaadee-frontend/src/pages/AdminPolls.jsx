@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { fetchPolls, deletePoll, startPoll, closePoll, extendPoll, subscribeToVotes, fetchPollResults } from '../api';
+import { fetchPolls, deletePoll, startPoll, closePoll, extendPoll, subscribeToVotes, fetchPollResults, resetPoll } from '../api';
 
 const AdminPolls = () => {
   const navigate = useNavigate();
@@ -79,6 +79,19 @@ const AdminPolls = () => {
     await extendPoll(id, 10);
     alert('Added 10 seconds to the poll!');
     loadPolls();
+  };
+
+  const handleResetPoll = async (id) => {
+    if (window.confirm("Are you sure? This will clear all votes for this poll and set it to pending.")) {
+      await resetPoll(id);
+      // Clear live votes from state too
+      setLiveVotes(prev => {
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      });
+      loadPolls();
+    }
   };
 
   const handleDeletePoll = async (id) => {
@@ -204,6 +217,12 @@ const AdminPolls = () => {
                            {!liveVotes[poll.id] && (
                              <button onClick={() => handleViewResults(poll.id)} className="text-[10px] font-bold uppercase tracking-widest text-ink hover:underline">Verify Winner</button>
                            )}
+                           <button 
+                             onClick={() => handleResetPoll(poll.id)} 
+                             className="text-[10px] font-bold uppercase tracking-widest text-blue-500 hover:text-blue-700 transition p-2 bg-blue-50 rounded group-hover:bg-blue-100"
+                           >
+                             Re-run Poll
+                           </button>
                            <button 
                              onClick={() => handleDeletePoll(poll.id)} 
                              className="text-[10px] font-bold uppercase tracking-widest text-red-400 hover:text-red-600 transition p-2 bg-red-50 rounded group-hover:bg-red-100"

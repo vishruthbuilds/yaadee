@@ -20,11 +20,28 @@ import ClassChaos from './pages/ClassChaos';
 import AdminClassChaos from './pages/AdminClassChaos';
 
 import DecorationLayer from './components/DecorationLayer';
-
 import LiveReactions from './components/LiveReactions';
+import { supabase } from './supabaseClient';
+import { fetchUserIdentity } from './api';
 
 function App() {
   const location = useLocation();
+
+  useEffect(() => {
+    const restoreUser = async () => {
+      // If we don't have a user in local storage, check if the logged in email has a mapping
+      if (!localStorage.getItem('yaadee_user')) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user && user.email) {
+          const mappedUser = await fetchUserIdentity(user.email);
+          if (mappedUser) {
+            localStorage.setItem('yaadee_user', JSON.stringify(mappedUser));
+          }
+        }
+      }
+    };
+    restoreUser();
+  }, []);
 
   const showReactions = ['/time-capsule', '/throwbacks', '/wall-of-fame', '/class-chaos', '/hub'].includes(location.pathname);
 

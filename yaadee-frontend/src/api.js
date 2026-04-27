@@ -500,3 +500,56 @@ export const resetChaosGame = async () => {
   await supabase.from('chaos_players').delete().neq('id', '00000000-0000-0000-0000-000000000000');
   return updateChaosGameState({ status: 'lobby', current_question_index: 0, timer_remaining: 30, is_paused: false });
 };
+
+// --- Poll Reset ---
+export const resetPoll = async (id) => {
+  // Clear votes for this poll
+  const { error: voteError } = await supabase.from('votes').delete().eq('poll_id', id);
+  if (voteError) console.error('Error clearing votes:', voteError);
+
+  // Reset status to pending
+  const { data, error } = await supabase.from('polls')
+    .update({ status: 'pending', started_at: null, options: [] })
+    .eq('id', id)
+    .select();
+  
+  if (error) console.error('Error resetting poll:', error);
+  return data;
+};
+
+// --- Identity Mapping ---
+export const saveUserIdentity = async (email, directoryUserId) => {
+  if (!email || !directoryUserId) return null;
+  const { data, error } = await supabase.from('user_identities')
+    .upsert({ email, directory_user_id: directoryUserId })
+    .select();
+  if (error) console.error('Error saving user identity:', error);
+  return { data, error };
+};
+
+export const fetchUserIdentity = async (email) => {
+  if (!email) return null;
+  // Get the mapping
+  const { data: mapping, error: mappingError } = await supabase.from('user_identities')
+    .select('directory_user_id')
+    .eq('email', email)
+    .single();
+
+  if (mappingError) {
+    if (mappingError.code !== 'PGRST116') console.error('Error fetching identity mapping:', mappingError);
+    return null;
+  }
+
+  // Get the actual user object
+  const { data: user, error: userError } = await supabase.from('users')
+    .select('*')
+    .eq('id', mapping.directory_user_id)
+    .single();
+
+  if (userError) {
+    console.error('Error fetching mapped user:', userError);
+    return null;
+  }
+
+  return user;
+};
